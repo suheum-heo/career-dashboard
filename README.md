@@ -1,36 +1,79 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CareerTrack — Job Application Dashboard
 
-## Getting Started
+A modern full-stack dashboard for tracking internship and full-time applications. Built to replace spreadsheet tracking with analytics, calendar views, and a clean hiring pipeline.
 
-First, run the development server:
+## Stack
+
+- **Next.js 15** (App Router) + React + TypeScript
+- **Tailwind CSS** + **shadcn/ui**
+- **Prisma** + **PostgreSQL** ([Neon](https://neon.tech) or local Docker)
+- **Recharts** for analytics
+- Dark mode via `next-themes`
+
+## Features
+
+- Dashboard with totals, interview/offer/rejection counts, response rate, monthly chart, status pie, recent activity
+- Applications table with search, sort, status/location filters, pagination, color-coded badges
+- Add / edit applications (company, title, location, dates, status, salary, referral, links, resume version, cover letter, notes)
+- Analytics: rates, locations, monthly trends, funnel + Sankey pipeline
+- Calendar for interviews and deadlines
+- Dark mode + responsive layout
+
+## Quick start (Neon)
+
+1. Create a free project at [console.neon.tech](https://console.neon.tech)
+2. Open **Connection details** and copy:
+   - **Pooled** connection → `DATABASE_URL`
+   - **Direct** connection → `DIRECT_URL`
+3. Configure and run:
 
 ```bash
+npm install
+cp .env.example .env
+# Paste both Neon URLs into .env
+
+npx prisma migrate deploy
+npm run db:seed   # optional sample data
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### Local Docker (optional)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+npm run db:up
+# Set DATABASE_URL and DIRECT_URL to the local Postgres URL in .env.example
+npm run db:migrate
+npm run db:seed
+npm run dev
+```
 
-## Learn More
+## Scripts
 
-To learn more about Next.js, take a look at the following resources:
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Next.js (Turbopack) |
+| `npm run build` | Production build |
+| `npm run db:up` | Start local Postgres via Docker |
+| `npm run db:migrate` | Run Prisma migrations |
+| `npm run db:seed` | Seed sample applications |
+| `npm run db:studio` | Open Prisma Studio |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Application statuses
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Wishlist → Applied → OA → Recruiter Screen → Interview → Final Round → Offer  
+Also: Rejected, Withdrawn, Ghosted
 
-## Deploy on Vercel
+## Project structure
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+  app/                 # Pages (dashboard, applications, analytics, calendar)
+  components/          # UI, charts, forms, layout
+  lib/                 # Prisma, actions, analytics, validations
+prisma/
+  schema.prisma
+  seed.ts
+docker-compose.yml     # Local Postgres
+```

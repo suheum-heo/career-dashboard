@@ -1,103 +1,112 @@
-import Image from "next/image";
+import Link from "next/link";
+import {
+  Briefcase,
+  CalendarCheck2,
+  Gift,
+  Percent,
+  Plus,
+  XCircle,
+} from "lucide-react";
+import { TopBar } from "@/components/layout/sidebar";
+import { StatCard } from "@/components/stat-card";
+import { MonthlyChart } from "@/components/charts/monthly-chart";
+import { StatusPieChart } from "@/components/charts/status-pie";
+import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { getAllApplications, getRecentApplications } from "@/lib/actions";
+import {
+  computeStats,
+  monthlyApplicationCounts,
+  statusDistribution,
+} from "@/lib/analytics";
 
-export default function Home() {
+export default async function DashboardPage() {
+  const [apps, recent] = await Promise.all([
+    getAllApplications(),
+    getRecentApplications(8),
+  ]);
+  const stats = computeStats(apps);
+  const monthly = monthlyApplicationCounts(apps, 6);
+  const statusData = statusDistribution(apps);
+
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <div>
+      <TopBar
+        title="Dashboard"
+        description="Your internship and full-time pipeline at a glance."
+        actions={
+          <Link
+            href="/applications/new"
+            className={cn(buttonVariants(), "h-9 rounded-xl")}
+          >
+            <Plus className="size-4" />
+            Add Application
+          </Link>
+        }
+      />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+        <StatCard
+          title="Total Applications"
+          value={stats.total}
+          subtitle="Excluding wishlist"
+          icon={Briefcase}
+        />
+        <StatCard
+          title="Interviews"
+          value={stats.interviews}
+          subtitle={`${stats.interviewRate}% interview rate`}
+          icon={CalendarCheck2}
+          accent="bg-amber-500/10 text-amber-600 dark:text-amber-400"
+        />
+        <StatCard
+          title="Offers"
+          value={stats.offers}
+          subtitle={`${stats.offerRate}% offer rate`}
+          icon={Gift}
+          accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+        />
+        <StatCard
+          title="Rejections"
+          value={stats.rejections}
+          icon={XCircle}
+          accent="bg-rose-500/10 text-rose-600 dark:text-rose-400"
+        />
+        <StatCard
+          title="Response Rate"
+          value={`${stats.responseRate}%`}
+          subtitle="Any reply past applied"
+          icon={Percent}
+          accent="bg-sky-500/10 text-sky-600 dark:text-sky-400"
+        />
+      </div>
+
+      <div className="mb-6 grid gap-6 lg:grid-cols-5">
+        <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] lg:col-span-3">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">
+              Applications by month
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <MonthlyChart data={monthly} />
+          </CardContent>
+        </Card>
+        <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] lg:col-span-2">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base font-semibold">
+              Status distribution
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <StatusPieChart data={statusData} />
+          </CardContent>
+        </Card>
+      </div>
+
+      <RecentActivity applications={recent} />
     </div>
   );
 }

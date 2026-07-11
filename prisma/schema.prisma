@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum ApplicationStatus {
+  WISHLIST
+  APPLIED
+  OA
+  RECRUITER_SCREEN
+  INTERVIEW
+  FINAL_ROUND
+  OFFER
+  REJECTED
+  WITHDRAWN
+  GHOSTED
+}
+
+model Application {
+  id             String            @id @default(cuid())
+  company        String
+  jobTitle       String
+  location       String?
+  dateApplied    DateTime?
+  status         ApplicationStatus @default(WISHLIST)
+  salary         String?
+  referral       Boolean           @default(false)
+  jobLink        String?
+  resumeVersion  String?
+  coverLetter    Boolean           @default(false)
+  notes          String?
+  interviewDate  DateTime?
+  deadline       DateTime?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  @@index([status])
+  @@index([dateApplied])
+  @@index([company])
+  @@index([location])
+  @@index([interviewDate])
+}

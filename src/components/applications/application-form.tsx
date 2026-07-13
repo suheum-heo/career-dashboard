@@ -2,7 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
-import { Application, ApplicationStatus } from "@prisma/client";
+import { Application, ApplicationStatus, JobType } from "@prisma/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,7 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ALL_STATUSES, STATUS_LABELS } from "@/lib/constants";
+import {
+  ALL_JOB_TYPES,
+  ALL_STATUSES,
+  JOB_TYPE_LABELS,
+  STATUS_LABELS,
+} from "@/lib/constants";
 import { toDateInputValue } from "@/lib/analytics";
 import type { ExtractedJob } from "@/lib/validations";
 import {
@@ -44,6 +49,12 @@ export function ApplicationForm({
   const [status, setStatus] = useState<ApplicationStatus>(
     application?.status ?? ApplicationStatus.WISHLIST
   );
+  const [jobType, setJobType] = useState<JobType>(
+    application?.jobType ?? JobType.INTERNSHIP
+  );
+  const [startYear, setStartYear] = useState(
+    application?.startYear ? String(application.startYear) : ""
+  );
   const [referral, setReferral] = useState(application?.referral ?? false);
   const [coverLetter, setCoverLetter] = useState(application?.coverLetter ?? false);
   const [company, setCompany] = useState(application?.company ?? "");
@@ -70,6 +81,8 @@ export function ApplicationForm({
     if (data.salary) setSalary(data.salary);
     if (data.jobLink) setJobLink(data.jobLink);
     if (data.deadline) setDeadline(data.deadline);
+    if (data.jobType) setJobType(data.jobType);
+    if (data.startYear) setStartYear(String(data.startYear));
     if (data.notes) {
       setNotes((prev) => (prev.trim() ? `${prev.trim()}\n\n${data.notes}` : data.notes!));
     }
@@ -77,12 +90,18 @@ export function ApplicationForm({
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const parsedStartYear = startYear.trim() ? Number(startYear) : null;
     const payload = {
       company,
       jobTitle,
       location: location || null,
       dateApplied: dateApplied || null,
       status,
+      jobType,
+      startYear:
+        parsedStartYear && Number.isFinite(parsedStartYear)
+          ? parsedStartYear
+          : null,
       salary: salary || null,
       referral,
       jobLink: jobLink || null,
@@ -183,6 +202,36 @@ export function ApplicationForm({
               ))}
             </SelectContent>
           </Select>
+        </Field>
+        <Field label="Type" htmlFor="jobType">
+          <Select
+            value={jobType}
+            onValueChange={(v) => v && setJobType(v as JobType)}
+          >
+            <SelectTrigger id="jobType" className="h-10 w-full rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {ALL_JOB_TYPES.map((t) => (
+                <SelectItem key={t} value={t}>
+                  {JOB_TYPE_LABELS[t]}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </Field>
+        <Field label="Start year" htmlFor="startYear">
+          <Input
+            id="startYear"
+            name="startYear"
+            type="number"
+            min={2000}
+            max={2100}
+            value={startYear}
+            onChange={(e) => setStartYear(e.target.value)}
+            className="h-10 rounded-xl"
+            placeholder="e.g. 2027"
+          />
         </Field>
         <Field label="Salary" htmlFor="salary">
           <Input

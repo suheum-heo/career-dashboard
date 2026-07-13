@@ -16,6 +16,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllApplications } from "@/lib/actions";
 import {
   availableYears,
+  availableStartYears,
   chartDataForPeriod,
   computeStats,
   filterByPeriod,
@@ -29,6 +30,8 @@ import {
 type SearchParams = Promise<{
   year?: string;
   month?: string;
+  jobType?: string;
+  startYear?: string;
 }>;
 
 export default async function AnalyticsPage({
@@ -40,10 +43,11 @@ export default async function AnalyticsPage({
   const period = parsePeriodFromSearchParams(params);
   const allApps = await getAllApplications();
   const years = availableYears(allApps);
+  const startYears = availableStartYears(allApps);
   const apps = filterByPeriod(allApps, period);
   const stats = computeStats(apps);
   const monthly = chartDataForPeriod(
-    period.year ? filterByPeriod(allApps, { year: period.year }) : apps,
+    period.year ? filterByPeriod(allApps, { ...period, month: null }) : apps,
     period,
     8
   );
@@ -59,7 +63,7 @@ export default async function AnalyticsPage({
         description={`Conversion, geography, and pipeline · ${periodLabel}`}
         actions={
           <Suspense fallback={null}>
-            <PeriodFilter years={years} />
+            <PeriodFilter years={years} startYears={startYears} />
           </Suspense>
         }
       />

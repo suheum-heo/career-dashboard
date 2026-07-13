@@ -21,7 +21,9 @@ export type DashboardStats = {
 
 export type PeriodFilter = {
   year?: number | null;
-  month?: number | null; // 1-12
+  month?: number | null; // 1-12 applied month
+  jobType?: string | null;
+  startYear?: number | null;
 };
 
 const INTERVIEW_STATUSES: ApplicationStatus[] = [
@@ -48,13 +50,18 @@ export function applicationDate(app: Application): Date {
 export function parsePeriodFromSearchParams(params: {
   year?: string;
   month?: string;
+  jobType?: string;
+  startYear?: string;
 }): PeriodFilter {
   const year = params.year ? Number(params.year) : null;
   const month = params.month ? Number(params.month) : null;
+  const startYear = params.startYear ? Number(params.startYear) : null;
   return {
     year: year && Number.isFinite(year) ? year : null,
     month:
       month && Number.isFinite(month) && month >= 1 && month <= 12 ? month : null,
+    jobType: params.jobType && params.jobType !== "ALL" ? params.jobType : null,
+    startYear: startYear && Number.isFinite(startYear) ? startYear : null,
   };
 }
 
@@ -62,13 +69,27 @@ export function filterByPeriod(
   apps: Application[],
   period: PeriodFilter
 ): Application[] {
-  if (!period.year) return apps;
   return apps.filter((app) => {
-    const d = applicationDate(app);
-    if (d.getFullYear() !== period.year) return false;
-    if (period.month && d.getMonth() + 1 !== period.month) return false;
+    if (period.jobType && app.jobType !== period.jobType) return false;
+    if (period.startYear && app.startYear !== period.startYear) return false;
+    if (period.year) {
+      const d = applicationDate(app);
+      if (d.getFullYear() !== period.year) return false;
+      if (period.month && d.getMonth() + 1 !== period.month) return false;
+    }
     return true;
   });
+}
+
+export function availableStartYears(apps: Application[]): number[] {
+  const years = new Set<number>();
+  for (const app of apps) {
+    if (app.startYear) years.add(app.startYear);
+  }
+  const current = new Date().getFullYear();
+  years.add(current);
+  years.add(current + 1);
+  return Array.from(years).sort((a, b) => b - a);
 }
 
 export function availableYears(apps: Application[]): number[] {
@@ -80,12 +101,21 @@ export function availableYears(apps: Application[]): number[] {
 }
 
 export function formatPeriodLabel(period: PeriodFilter): string {
-  if (!period.year) return "All time";
+  const parts: string[] = [];
+  if (period.jobType === "INTERNSHIP") parts.push("Internships");
+  else if (period.jobType === "FULL_TIME") parts.push("Full-time");
+  if (period.startYear) parts.push(`start ${period.startYear}`);
+  if (!period.year) {
+    if (!parts.length) return "All time";
+    return parts.join(" · ");
+  }
   if (period.month) {
     const d = new Date(period.year, period.month - 1, 1);
-    return format(d, "MMMM yyyy");
+    parts.push(`applied ${format(d, "MMM yyyy")}`);
+  } else {
+    parts.push(`applied ${period.year}`);
   }
-  return String(period.year);
+  return parts.join(" · ");
 }
 
 export function computeStats(apps: Application[]): DashboardStats {

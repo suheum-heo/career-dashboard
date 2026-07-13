@@ -11,12 +11,16 @@ const EXTRACTION_PROMPT = `Extract job application fields from the posting. Retu
   "salary": string | null,
   "jobLink": string | null,
   "notes": string | null,
-  "deadline": string | null
+  "deadline": string | null,
+  "jobType": "INTERNSHIP" | "FULL_TIME" | null,
+  "startYear": number | null
 }
 
 Field rules:
 - location: city, state/region, country, "Remote", hybrid, or office name exactly as shown (e.g. "San Francisco, CA", "Remote - US", "Seoul, Korea"). Look near the title, job meta row, and labels like Location / Offices / Workplace.
 - salary: pay, compensation, base, range, or hourly rate exactly as shown (e.g. "$120k-$150k", "$45/hr", "₩80,000,000"). Look for Salary / Compensation / Pay / Base / Total rewards. Include currency and range when present.
+- jobType: INTERNSHIP for intern/co-op roles, FULL_TIME for new grad or experienced full-time roles.
+- startYear: the year the role starts (e.g. Summer 2027 intern → 2027). Not the application year.
 - deadline: YYYY-MM-DD only if an application deadline is explicit, else null
 - notes: one short line max
 - Prefer null over guessing. Do not invent location or salary.`;
@@ -179,6 +183,11 @@ function normalizeExtracted(data: ExtractedJob): ExtractedJob {
     jobLink: clean(data.jobLink),
     notes: clean(data.notes),
     deadline: clean(data.deadline),
+    jobType: data.jobType ?? null,
+    startYear:
+      typeof data.startYear === "number" && Number.isFinite(data.startYear)
+        ? data.startYear
+        : null,
   };
 }
 

@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 import { getAllApplications, getRecentApplications } from "@/lib/actions";
 import {
   availableYears,
+  availableStartYears,
   chartDataForPeriod,
   computeStats,
   filterByPeriod,
@@ -31,6 +32,8 @@ import {
 type SearchParams = Promise<{
   year?: string;
   month?: string;
+  jobType?: string;
+  startYear?: string;
 }>;
 
 export default async function DashboardPage({
@@ -47,11 +50,11 @@ export default async function DashboardPage({
   ]);
 
   const years = availableYears(allApps);
+  const startYears = availableStartYears(allApps);
   const apps = filterByPeriod(allApps, period);
   const stats = computeStats(apps);
-  const chartApps = period.year ? allApps : apps;
   const monthly = chartDataForPeriod(
-    period.year ? filterByPeriod(allApps, { year: period.year }) : chartApps,
+    period.year ? filterByPeriod(allApps, { ...period, month: null }) : apps,
     period,
     6
   );
@@ -66,7 +69,7 @@ export default async function DashboardPage({
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Suspense fallback={null}>
-              <PeriodFilter years={years} />
+              <PeriodFilter years={years} startYears={startYears} />
             </Suspense>
             <Link
               href="/applications/new"

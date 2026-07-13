@@ -27,6 +27,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/status-badge";
 import { deleteApplications } from "@/lib/actions";
+import { JOB_TYPE_LABELS } from "@/lib/constants";
 
 type Props = {
   items: Application[];
@@ -200,6 +201,17 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                 <SortHeader label="Status" column="status" current={sortBy} dir={sortDir} />
               </TableHead>
               <TableHead>
+                <SortHeader label="Type" column="jobType" current={sortBy} dir={sortDir} />
+              </TableHead>
+              <TableHead>
+                <SortHeader
+                  label="Start"
+                  column="startYear"
+                  current={sortBy}
+                  dir={sortDir}
+                />
+              </TableHead>
+              <TableHead>
                 <SortHeader
                   label="Date Applied"
                   column="dateApplied"
@@ -226,7 +238,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={10} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
                   No applications found.
                 </TableCell>
               </TableRow>
@@ -260,6 +272,12 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                     <TableCell className="max-w-[180px] truncate">{app.jobTitle}</TableCell>
                     <TableCell>
                       <StatusBadge status={app.status} />
+                    </TableCell>
+                    <TableCell className="text-muted-foreground">
+                      {JOB_TYPE_LABELS[app.jobType]}
+                    </TableCell>
+                    <TableCell className="tabular-nums text-muted-foreground">
+                      {app.startYear ?? "—"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {app.dateApplied ? format(app.dateApplied, "MMM d, yyyy") : "—"}

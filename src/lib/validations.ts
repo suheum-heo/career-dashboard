@@ -1,10 +1,12 @@
 import { z } from "zod";
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus, JobType } from "@prisma/client";
 
 const statusValues = Object.values(ApplicationStatus) as [
   ApplicationStatus,
   ...ApplicationStatus[],
 ];
+
+const jobTypeValues = Object.values(JobType) as [JobType, ...JobType[]];
 
 export const applicationSchema = z.object({
   company: z.string().min(1, "Company is required").max(120),
@@ -12,6 +14,11 @@ export const applicationSchema = z.object({
   location: z.string().max(120).optional().nullable(),
   dateApplied: z.string().optional().nullable(),
   status: z.enum(statusValues),
+  jobType: z.enum(jobTypeValues),
+  startYear: z
+    .union([z.number().int().min(2000).max(2100), z.null()])
+    .optional()
+    .nullable(),
   salary: z.string().max(80).optional().nullable(),
   referral: z.boolean(),
   jobLink: z
@@ -34,6 +41,8 @@ export const extractedJobSchema = z.object({
   jobLink: z.string().nullable().optional(),
   notes: z.string().nullable().optional(),
   deadline: z.string().nullable().optional(),
+  jobType: z.enum(jobTypeValues).nullable().optional(),
+  startYear: z.number().int().nullable().optional(),
 });
 
 export type ExtractedJob = z.infer<typeof extractedJobSchema>;

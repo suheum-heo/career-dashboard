@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { ALL_JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/constants";
 
 const MONTHS = [
   { value: "1", label: "January" },
@@ -25,7 +26,13 @@ const MONTHS = [
   { value: "12", label: "December" },
 ];
 
-export function PeriodFilter({ years }: { years: number[] }) {
+export function PeriodFilter({
+  years,
+  startYears,
+}: {
+  years: number[];
+  startYears: number[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -33,6 +40,8 @@ export function PeriodFilter({ years }: { years: number[] }) {
 
   const year = searchParams.get("year") ?? "ALL";
   const month = searchParams.get("month") ?? "ALL";
+  const jobType = searchParams.get("jobType") ?? "ALL";
+  const startYear = searchParams.get("startYear") ?? "ALL";
 
   function updateParams(updates: Record<string, string | null>) {
     const params = new URLSearchParams(searchParams.toString());
@@ -51,10 +60,47 @@ export function PeriodFilter({ years }: { years: number[] }) {
       className={`flex flex-wrap items-center gap-2 ${isPending ? "opacity-70" : ""}`}
     >
       <Select
+        value={jobType}
+        onValueChange={(value) =>
+          updateParams({ jobType: value === "ALL" ? null : value })
+        }
+      >
+        <SelectTrigger className="h-9 w-[140px] rounded-xl">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All types</SelectItem>
+          {ALL_JOB_TYPES.map((t) => (
+            <SelectItem key={t} value={t}>
+              {JOB_TYPE_LABELS[t]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
+        value={startYear}
+        onValueChange={(value) =>
+          updateParams({ startYear: value === "ALL" ? null : value })
+        }
+      >
+        <SelectTrigger className="h-9 w-[150px] rounded-xl">
+          <SelectValue placeholder="Start year" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All start years</SelectItem>
+          {startYears.map((y) => (
+            <SelectItem key={y} value={String(y)}>
+              Start {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+
+      <Select
         value={year}
         onValueChange={(value) => {
           const nextYear = value ?? "ALL";
-          // Reset month when going back to all-time
           if (nextYear === "ALL") {
             updateParams({ year: null, month: null });
           } else {
@@ -62,14 +108,14 @@ export function PeriodFilter({ years }: { years: number[] }) {
           }
         }}
       >
-        <SelectTrigger className="h-9 w-[130px] rounded-xl">
-          <SelectValue placeholder="Year" />
+        <SelectTrigger className="h-9 w-[140px] rounded-xl">
+          <SelectValue placeholder="Applied year" />
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All years</SelectItem>
+          <SelectItem value="ALL">All applied</SelectItem>
           {years.map((y) => (
             <SelectItem key={y} value={String(y)}>
-              {y}
+              Applied {y}
             </SelectItem>
           ))}
         </SelectContent>

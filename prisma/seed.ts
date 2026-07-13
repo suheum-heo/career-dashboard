@@ -1,4 +1,4 @@
-import { PrismaClient, ApplicationStatus } from "@prisma/client";
+import { PrismaClient, ApplicationStatus, JobType } from "@prisma/client";
 import { subDays, subMonths, addDays } from "date-fns";
 
 const prisma = new PrismaClient();
@@ -72,6 +72,8 @@ async function main() {
     return {
       ...c,
       status,
+      jobType: JobType.INTERNSHIP,
+      startYear: now.getFullYear() + (i % 2),
       dateApplied,
       interviewDate,
       referral: i % 4 === 0,
@@ -103,6 +105,8 @@ async function main() {
         ApplicationStatus.GHOSTED,
         ApplicationStatus.OFFER,
       ][i % 4],
+      jobType: JobType.FULL_TIME,
+      startYear: now.getFullYear() + (i % 3 === 0 ? 1 : 0),
       dateApplied: subMonths(now, 1 + (i % 6)),
       referral: i % 5 === 0,
       salary: null,

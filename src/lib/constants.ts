@@ -1,4 +1,4 @@
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus, JobType } from "@prisma/client";
 
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   WISHLIST: "Wishlist",
@@ -93,5 +93,12 @@ export const PIPELINE_ORDER: ApplicationStatus[] = [
 ];
 
 export const ALL_STATUSES = Object.values(ApplicationStatus);
+
+export const JOB_TYPE_LABELS: Record<JobType, string> = {
+  INTERNSHIP: "Internship",
+  FULL_TIME: "Full-time",
+};
+
+export const ALL_JOB_TYPES = Object.values(JobType);
 
 export const PAGE_SIZE = 10;

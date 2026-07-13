@@ -16,6 +16,8 @@ export type ApplicationListParams = {
   search?: string;
   status?: string;
   location?: string;
+  jobType?: string;
+  startYear?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: number;
@@ -40,6 +42,15 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
     where.location = { equals: params.location, mode: "insensitive" };
   }
 
+  if (params.jobType && params.jobType !== "ALL") {
+    where.jobType = params.jobType as import("@prisma/client").JobType;
+  }
+
+  if (params.startYear && params.startYear !== "ALL") {
+    const year = Number(params.startYear);
+    if (Number.isFinite(year)) where.startYear = year;
+  }
+
   return where;
 }
 
@@ -53,6 +64,8 @@ export async function getApplications(params: ApplicationListParams = {}) {
     "company",
     "jobTitle",
     "status",
+    "jobType",
+    "startYear",
     "dateApplied",
     "location",
     "interviewDate",
@@ -100,6 +113,16 @@ export async function getLocations() {
   return rows.map((r) => r.location!).filter(Boolean);
 }
 
+export async function getStartYears() {
+  const rows = await prisma.application.findMany({
+    where: { startYear: { not: null } },
+    select: { startYear: true },
+    distinct: ["startYear"],
+    orderBy: { startYear: "desc" },
+  });
+  return rows.map((r) => r.startYear!).filter(Boolean);
+}
+
 export async function getRecentApplications(limit = 8) {
   return prisma.application.findMany({
     orderBy: { updatedAt: "desc" },
@@ -134,6 +157,8 @@ export async function createApplication(raw: unknown) {
       location: data.location || null,
       dateApplied: parseOptionalDate(data.dateApplied),
       status: data.status,
+      jobType: data.jobType,
+      startYear: data.startYear ?? null,
       salary: data.salary || null,
       referral: data.referral,
       jobLink: data.jobLink || null,
@@ -167,6 +192,8 @@ export async function updateApplication(id: string, raw: unknown) {
       location: data.location || null,
       dateApplied: parseOptionalDate(data.dateApplied),
       status: data.status,
+      jobType: data.jobType,
+      startYear: data.startYear ?? null,
       salary: data.salary || null,
       referral: data.referral,
       jobLink: data.jobLink || null,

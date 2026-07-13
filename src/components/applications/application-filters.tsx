@@ -12,9 +12,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ALL_STATUSES, STATUS_LABELS } from "@/lib/constants";
+import {
+  ALL_JOB_TYPES,
+  ALL_STATUSES,
+  JOB_TYPE_LABELS,
+  STATUS_LABELS,
+} from "@/lib/constants";
 
-export function ApplicationFilters({ locations }: { locations: string[] }) {
+export function ApplicationFilters({
+  locations,
+  startYears,
+}: {
+  locations: string[];
+  startYears: number[];
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
@@ -49,9 +60,9 @@ export function ApplicationFilters({ locations }: { locations: string[] }) {
 
   return (
     <div
-      className={`flex flex-col gap-3 sm:flex-row sm:items-center ${isPending ? "opacity-70" : ""}`}
+      className={`flex flex-col gap-3 lg:flex-row lg:flex-wrap lg:items-center ${isPending ? "opacity-70" : ""}`}
     >
-      <div className="relative flex-1">
+      <div className="relative min-w-[200px] flex-1">
         <Search className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground" />
         <Input
           value={search}
@@ -60,6 +71,38 @@ export function ApplicationFilters({ locations }: { locations: string[] }) {
           className="h-10 rounded-xl pl-9"
         />
       </div>
+      <Select
+        value={searchParams.get("jobType") ?? "ALL"}
+        onValueChange={(value) => updateParams({ jobType: value ?? "ALL" })}
+      >
+        <SelectTrigger className="h-10 w-full rounded-xl sm:w-[150px]">
+          <SelectValue placeholder="Type" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All types</SelectItem>
+          {ALL_JOB_TYPES.map((type) => (
+            <SelectItem key={type} value={type}>
+              {JOB_TYPE_LABELS[type]}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+      <Select
+        value={searchParams.get("startYear") ?? "ALL"}
+        onValueChange={(value) => updateParams({ startYear: value ?? "ALL" })}
+      >
+        <SelectTrigger className="h-10 w-full rounded-xl sm:w-[150px]">
+          <SelectValue placeholder="Start year" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="ALL">All start years</SelectItem>
+          {startYears.map((y) => (
+            <SelectItem key={y} value={String(y)}>
+              Start {y}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
       <Select
         value={searchParams.get("status") ?? "ALL"}
         onValueChange={(value) => updateParams({ status: value ?? "ALL" })}

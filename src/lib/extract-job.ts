@@ -54,7 +54,13 @@ function isQuotaError(err: unknown): boolean {
 
 function isModelMissingError(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
-  return message.includes("404") || message.toLowerCase().includes("not found");
+  const lower = message.toLowerCase();
+  return (
+    message.includes("404") ||
+    lower.includes("not found") ||
+    lower.includes("no longer available") ||
+    lower.includes("not supported")
+  );
 }
 
 function friendlyQuotaError(err: unknown): Error {

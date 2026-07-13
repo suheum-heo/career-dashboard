@@ -7,10 +7,11 @@ const EXTRACTION_PROMPT = `Extract job details. Return ONLY JSON:
 {"company":string|null,"jobTitle":string|null,"location":string|null,"salary":string|null,"jobLink":string|null,"notes":string|null,"deadline":string|null}
 deadline must be YYYY-MM-DD or null. Prefer null over guessing. notes: one short line max.`;
 
-/** Prefer Flash-Lite for free-tier headroom; override with GEMINI_MODEL. */
+/** Current models for new API keys; override with GEMINI_MODEL. */
 const DEFAULT_MODELS = [
-  "gemini-2.5-flash-lite",
-  "gemini-2.5-flash",
+  "gemini-3.1-flash-lite",
+  "gemini-flash-lite-latest",
+  "gemini-3.5-flash",
 ];
 
 function getGemini() {

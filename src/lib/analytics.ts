@@ -19,6 +19,11 @@ export type DashboardStats = {
   offerRate: number;
 };
 
+export type PeriodFilter = {
+  year?: number | null;
+  month?: number | null; // 1-12
+};
+
 const INTERVIEW_STATUSES: ApplicationStatus[] = [
   ApplicationStatus.RECRUITER_SCREEN,
   ApplicationStatus.INTERVIEW,
@@ -34,6 +39,54 @@ const RESPONSE_STATUSES: ApplicationStatus[] = [
   ApplicationStatus.OFFER,
   ApplicationStatus.REJECTED,
 ];
+
+/** Prefer date applied; fall back to createdAt for wishlist / undated rows. */
+export function applicationDate(app: Application): Date {
+  return app.dateApplied ?? app.createdAt;
+}
+
+export function parsePeriodFromSearchParams(params: {
+  year?: string;
+  month?: string;
+}): PeriodFilter {
+  const year = params.year ? Number(params.year) : null;
+  const month = params.month ? Number(params.month) : null;
+  return {
+    year: year && Number.isFinite(year) ? year : null,
+    month:
+      month && Number.isFinite(month) && month >= 1 && month <= 12 ? month : null,
+  };
+}
+
+export function filterByPeriod(
+  apps: Application[],
+  period: PeriodFilter
+): Application[] {
+  if (!period.year) return apps;
+  return apps.filter((app) => {
+    const d = applicationDate(app);
+    if (d.getFullYear() !== period.year) return false;
+    if (period.month && d.getMonth() + 1 !== period.month) return false;
+    return true;
+  });
+}
+
+export function availableYears(apps: Application[]): number[] {
+  const years = new Set<number>([new Date().getFullYear()]);
+  for (const app of apps) {
+    years.add(applicationDate(app).getFullYear());
+  }
+  return Array.from(years).sort((a, b) => b - a);
+}
+
+export function formatPeriodLabel(period: PeriodFilter): string {
+  if (!period.year) return "All time";
+  if (period.month) {
+    const d = new Date(period.year, period.month - 1, 1);
+    return format(d, "MMMM yyyy");
+  }
+  return String(period.year);
+}
 
 export function computeStats(apps: Application[]): DashboardStats {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
@@ -68,11 +121,50 @@ export function monthlyApplicationCounts(apps: Application[], months = 6) {
   return range.map((month) => {
     const key = format(month, "yyyy-MM");
     const count = apps.filter((a) => {
-      if (!a.dateApplied) return false;
-      return format(a.dateApplied, "yyyy-MM") === key;
+      return format(applicationDate(a), "yyyy-MM") === key;
     }).length;
     return { month: format(month, "MMM"), full: key, count };
   });
+}
+
+export function monthlyCountsForYear(apps: Application[], year: number) {
+  const start = new Date(year, 0, 1);
+  const end = new Date(year, 11, 1);
+  const range = eachMonthOfInterval({
+    start: startOfMonth(start),
+    end: startOfMonth(end),
+  });
+
+  return range.map((month) => {
+    const key = format(month, "yyyy-MM");
+    const count = apps.filter(
+      (a) => format(applicationDate(a), "yyyy-MM") === key
+    ).length;
+    return { month: format(month, "MMM"), full: key, count };
+  });
+}
+
+export function yearlyApplicationCounts(apps: Application[]) {
+  const years = availableYears(apps).slice().reverse();
+  return years.map((year) => ({
+    month: String(year),
+    full: String(year),
+    count: apps.filter((a) => applicationDate(a).getFullYear() === year).length,
+  }));
+}
+
+export function chartDataForPeriod(
+  apps: Application[],
+  period: PeriodFilter,
+  fallbackMonths = 6
+) {
+  if (!period.year) {
+    const years = availableYears(apps);
+    if (years.length > 1) return yearlyApplicationCounts(apps);
+    if (years.length === 1) return monthlyCountsForYear(apps, years[0]!);
+    return monthlyApplicationCounts(apps, fallbackMonths);
+  }
+  return monthlyCountsForYear(apps, period.year);
 }
 
 export function statusDistribution(apps: Application[]) {
@@ -105,7 +197,6 @@ export function locationCounts(apps: Application[], limit = 8) {
 export function pipelineFunnel(apps: Application[]) {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
 
-  // Count how many reached each stage (cumulative funnel)
   const stages = [
     ApplicationStatus.APPLIED,
     ApplicationStatus.OA,
@@ -167,7 +258,6 @@ export function sankeyData(apps: Application[]) {
   const ghosted = countStatus(ApplicationStatus.GHOSTED);
   const withdrawn = countStatus(ApplicationStatus.WITHDRAWN);
 
-  // Approximate flow: people currently at later stages also passed earlier ones
   const atOrPast = (statuses: ApplicationStatus[]) =>
     submitted.filter((a) => statuses.includes(a.status)).length;
 

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import {
   Briefcase,
   CalendarCheck2,
@@ -12,38 +13,69 @@ import { StatCard } from "@/components/stat-card";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { StatusPieChart } from "@/components/charts/status-pie";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { PeriodFilter } from "@/components/period-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getAllApplications, getRecentApplications } from "@/lib/actions";
 import {
+  availableYears,
+  chartDataForPeriod,
   computeStats,
-  monthlyApplicationCounts,
+  filterByPeriod,
+  formatPeriodLabel,
+  parsePeriodFromSearchParams,
   statusDistribution,
 } from "@/lib/analytics";
 
-export default async function DashboardPage() {
-  const [apps, recent] = await Promise.all([
+type SearchParams = Promise<{
+  year?: string;
+  month?: string;
+}>;
+
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const period = parsePeriodFromSearchParams(params);
+
+  const [allApps, recent] = await Promise.all([
     getAllApplications(),
     getRecentApplications(8),
   ]);
+
+  const years = availableYears(allApps);
+  const apps = filterByPeriod(allApps, period);
   const stats = computeStats(apps);
-  const monthly = monthlyApplicationCounts(apps, 6);
+  const chartApps = period.year ? allApps : apps;
+  const monthly = chartDataForPeriod(
+    period.year ? filterByPeriod(allApps, { year: period.year }) : chartApps,
+    period,
+    6
+  );
   const statusData = statusDistribution(apps);
+  const periodLabel = formatPeriodLabel(period);
 
   return (
     <div>
       <TopBar
         title="Dashboard"
-        description="Your internship and full-time pipeline at a glance."
+        description={`Pipeline overview · ${periodLabel}`}
         actions={
-          <Link
-            href="/applications/new"
-            className={cn(buttonVariants(), "h-9 rounded-xl")}
-          >
-            <Plus className="size-4" />
-            Add Application
-          </Link>
+          <div className="flex flex-wrap items-center gap-2">
+            <Suspense fallback={null}>
+              <PeriodFilter years={years} />
+            </Suspense>
+            <Link
+              href="/applications/new"
+              className={cn(buttonVariants(), "h-9 rounded-xl")}
+            >
+              <Plus className="size-4" />
+              Add Application
+            </Link>
+          </div>
         }
       />
 
@@ -87,7 +119,7 @@ export default async function DashboardPage() {
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] lg:col-span-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              Applications by month
+              {period.year ? `Applications in ${period.year}` : "Applications over time"}
             </CardTitle>
           </CardHeader>
           <CardContent>

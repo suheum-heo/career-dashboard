@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import {
   Briefcase,
   CalendarCheck2,
@@ -10,29 +11,57 @@ import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { FunnelChart } from "@/components/charts/funnel-chart";
 import { PipelineSankey } from "@/components/charts/pipeline-sankey";
 import { LocationChart } from "@/components/charts/location-chart";
+import { PeriodFilter } from "@/components/period-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllApplications } from "@/lib/actions";
 import {
+  availableYears,
+  chartDataForPeriod,
   computeStats,
+  filterByPeriod,
+  formatPeriodLabel,
   locationCounts,
-  monthlyApplicationCounts,
+  parsePeriodFromSearchParams,
   pipelineFunnel,
   sankeyData,
 } from "@/lib/analytics";
 
-export default async function AnalyticsPage() {
-  const apps = await getAllApplications();
+type SearchParams = Promise<{
+  year?: string;
+  month?: string;
+}>;
+
+export default async function AnalyticsPage({
+  searchParams,
+}: {
+  searchParams: SearchParams;
+}) {
+  const params = await searchParams;
+  const period = parsePeriodFromSearchParams(params);
+  const allApps = await getAllApplications();
+  const years = availableYears(allApps);
+  const apps = filterByPeriod(allApps, period);
   const stats = computeStats(apps);
-  const monthly = monthlyApplicationCounts(apps, 8);
+  const monthly = chartDataForPeriod(
+    period.year ? filterByPeriod(allApps, { year: period.year }) : apps,
+    period,
+    8
+  );
   const locations = locationCounts(apps);
   const funnel = pipelineFunnel(apps);
   const sankey = sankeyData(apps);
+  const periodLabel = formatPeriodLabel(period);
 
   return (
     <div>
       <TopBar
         title="Analytics"
-        description="Conversion rates, geography, and hiring pipeline."
+        description={`Conversion, geography, and pipeline · ${periodLabel}`}
+        actions={
+          <Suspense fallback={null}>
+            <PeriodFilter years={years} />
+          </Suspense>
+        }
       />
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -65,7 +94,7 @@ export default async function AnalyticsPage() {
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              Applications over time
+              {period.year ? `Applications in ${period.year}` : "Applications over time"}
             </CardTitle>
           </CardHeader>
           <CardContent>

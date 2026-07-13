@@ -3,7 +3,7 @@
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useTransition, useState, useEffect } from "react";
 import { Search } from "lucide-react";
-import { ApplicationStatus } from "@prisma/client";
+import { ApplicationStatus, JobType } from "@prisma/client";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -76,7 +76,13 @@ export function ApplicationFilters({
         onValueChange={(value) => updateParams({ jobType: value ?? "ALL" })}
       >
         <SelectTrigger className="h-10 w-full rounded-xl sm:w-[150px]">
-          <SelectValue placeholder="Type" />
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL"
+                ? "All types"
+                : (JOB_TYPE_LABELS[value as JobType] ?? value)
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All types</SelectItem>
@@ -91,8 +97,12 @@ export function ApplicationFilters({
         value={searchParams.get("startYear") ?? "ALL"}
         onValueChange={(value) => updateParams({ startYear: value ?? "ALL" })}
       >
-        <SelectTrigger className="h-10 w-full rounded-xl sm:w-[150px]">
-          <SelectValue placeholder="Start year" />
+        <SelectTrigger className="h-10 w-full rounded-xl sm:w-[160px]">
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL" ? "All start years" : `Start ${value}`
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All start years</SelectItem>
@@ -108,7 +118,13 @@ export function ApplicationFilters({
         onValueChange={(value) => updateParams({ status: value ?? "ALL" })}
       >
         <SelectTrigger className="h-10 w-full rounded-xl sm:w-[180px]">
-          <SelectValue placeholder="Status" />
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL"
+                ? "All statuses"
+                : (STATUS_LABELS[value as ApplicationStatus] ?? value)
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All statuses</SelectItem>
@@ -124,7 +140,11 @@ export function ApplicationFilters({
         onValueChange={(value) => updateParams({ location: value ?? "ALL" })}
       >
         <SelectTrigger className="h-10 w-full rounded-xl sm:w-[200px]">
-          <SelectValue placeholder="Location" />
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL" ? "All locations" : value
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All locations</SelectItem>

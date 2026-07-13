@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ALL_JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/constants";
+import type { JobType } from "@prisma/client";
 
 const MONTHS = [
   { value: "1", label: "January" },
@@ -25,6 +26,10 @@ const MONTHS = [
   { value: "11", label: "November" },
   { value: "12", label: "December" },
 ];
+
+const MONTH_LABELS: Record<string, string> = Object.fromEntries(
+  MONTHS.map((m) => [m.value, m.label])
+);
 
 export function PeriodFilter({
   years,
@@ -65,8 +70,14 @@ export function PeriodFilter({
           updateParams({ jobType: value === "ALL" ? null : value })
         }
       >
-        <SelectTrigger className="h-9 w-[140px] rounded-xl">
-          <SelectValue placeholder="Type" />
+        <SelectTrigger className="h-9 min-w-[140px] rounded-xl">
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL"
+                ? "All types"
+                : (JOB_TYPE_LABELS[value as JobType] ?? value)
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All types</SelectItem>
@@ -84,8 +95,12 @@ export function PeriodFilter({
           updateParams({ startYear: value === "ALL" ? null : value })
         }
       >
-        <SelectTrigger className="h-9 w-[150px] rounded-xl">
-          <SelectValue placeholder="Start year" />
+        <SelectTrigger className="h-9 min-w-[150px] rounded-xl">
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL" ? "All start years" : `Start ${value}`
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All start years</SelectItem>
@@ -108,8 +123,12 @@ export function PeriodFilter({
           }
         }}
       >
-        <SelectTrigger className="h-9 w-[140px] rounded-xl">
-          <SelectValue placeholder="Applied year" />
+        <SelectTrigger className="h-9 min-w-[140px] rounded-xl">
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL" ? "All applied" : `Applied ${value}`
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All applied</SelectItem>
@@ -128,8 +147,14 @@ export function PeriodFilter({
           updateParams({ month: value === "ALL" ? null : value })
         }
       >
-        <SelectTrigger className="h-9 w-[150px] rounded-xl">
-          <SelectValue placeholder="Month" />
+        <SelectTrigger className="h-9 min-w-[150px] rounded-xl">
+          <SelectValue>
+            {(value: string | null) =>
+              !value || value === "ALL"
+                ? "All months"
+                : (MONTH_LABELS[value] ?? value)
+            }
+          </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">All months</SelectItem>

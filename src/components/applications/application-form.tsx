@@ -176,16 +176,12 @@ export function ApplicationForm({
             placeholder="Cupertino, CA"
           />
         </Field>
-        <Field label="Date Applied" htmlFor="dateApplied">
-          <Input
-            id="dateApplied"
-            name="dateApplied"
-            type="date"
-            value={dateApplied}
-            onChange={(e) => setDateApplied(e.target.value)}
-            className="h-10 rounded-xl"
-          />
-        </Field>
+        <OptionalDateField
+          label="Date Applied"
+          id="dateApplied"
+          value={dateApplied}
+          onChange={setDateApplied}
+        />
         <Field label="Status" htmlFor="status">
           <Select
             value={status}
@@ -264,26 +260,19 @@ export function ApplicationForm({
             placeholder="v3-swe"
           />
         </Field>
-        <Field label="Interview Date" htmlFor="interviewDate">
-          <Input
-            id="interviewDate"
-            name="interviewDate"
-            type="date"
-            value={interviewDate}
-            onChange={(e) => setInterviewDate(e.target.value)}
-            className="h-10 rounded-xl"
-          />
-        </Field>
-        <Field label="Deadline" htmlFor="deadline">
-          <Input
-            id="deadline"
-            name="deadline"
-            type="date"
-            value={deadline}
-            onChange={(e) => setDeadline(e.target.value)}
-            className="h-10 rounded-xl"
-          />
-        </Field>
+        <OptionalDateField
+          label="Interview Date"
+          id="interviewDate"
+          value={interviewDate}
+          onChange={setInterviewDate}
+          hint="Leave blank if none scheduled"
+        />
+        <OptionalDateField
+          label="Deadline"
+          id="deadline"
+          value={deadline}
+          onChange={setDeadline}
+        />
       </div>
 
       <div className="flex flex-wrap gap-6">
@@ -364,6 +353,50 @@ function Field({
         {required ? <span className="text-destructive"> *</span> : null}
       </Label>
       {children}
+    </div>
+  );
+}
+
+function OptionalDateField({
+  label,
+  id,
+  value,
+  onChange,
+  hint,
+}: {
+  label: string;
+  id: string;
+  value: string;
+  onChange: (value: string) => void;
+  hint?: string;
+}) {
+  return (
+    <div className="space-y-2">
+      <div className="flex items-baseline justify-between gap-2">
+        <Label htmlFor={id}>{label}</Label>
+        <span className="text-xs text-muted-foreground">Optional</span>
+      </div>
+      <div className="flex gap-2">
+        <Input
+          id={id}
+          name={id}
+          type="date"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="h-10 rounded-xl"
+        />
+        {value ? (
+          <Button
+            type="button"
+            variant="outline"
+            className="h-10 shrink-0 rounded-xl px-3"
+            onClick={() => onChange("")}
+          >
+            Clear
+          </Button>
+        ) : null}
+      </div>
+      {hint ? <p className="text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }

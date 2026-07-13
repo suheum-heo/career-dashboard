@@ -3,9 +3,23 @@ import { extractedJobSchema, type ExtractedJob } from "@/lib/validations";
 
 export type { ExtractedJob };
 
-const EXTRACTION_PROMPT = `Extract job details. Return ONLY JSON:
-{"company":string|null,"jobTitle":string|null,"location":string|null,"salary":string|null,"jobLink":string|null,"notes":string|null,"deadline":string|null}
-deadline must be YYYY-MM-DD or null. Prefer null over guessing. notes: one short line max.`;
+const EXTRACTION_PROMPT = `Extract job application fields from the posting. Return ONLY JSON:
+{
+  "company": string | null,
+  "jobTitle": string | null,
+  "location": string | null,
+  "salary": string | null,
+  "jobLink": string | null,
+  "notes": string | null,
+  "deadline": string | null
+}
+
+Field rules:
+- location: city, state/region, country, "Remote", hybrid, or office name exactly as shown (e.g. "San Francisco, CA", "Remote - US", "Seoul, Korea"). Look near the title, job meta row, and labels like Location / Offices / Workplace.
+- salary: pay, compensation, base, range, or hourly rate exactly as shown (e.g. "$120k-$150k", "$45/hr", "₩80,000,000"). Look for Salary / Compensation / Pay / Base / Total rewards. Include currency and range when present.
+- deadline: YYYY-MM-DD only if an application deadline is explicit, else null
+- notes: one short line max
+- Prefer null over guessing. Do not invent location or salary.`;
 
 /** Current models for new API keys; override with GEMINI_MODEL. */
 const DEFAULT_MODELS = [
@@ -135,6 +149,39 @@ function htmlToText(html: string): string {
     .trim();
 }
 
+/** Pull salary/location-looking lines to the front so truncation keeps them. */
+function prioritizeMetaSnippets(text: string): string {
+  const metaPattern =
+    /\b(location|locations|office|offices|workplace|remote|hybrid|on[\s-]?site|salary|compensation|pay|base\s*pay|hourly|wage|stipend|total\s*rewards|\$|₩|€|£|CAD|USD|KRW)\b/i;
+
+  const sentences = text
+    .split(/(?<=[.!?])\s+|\n+|(?<=;)\s+/)
+    .map((s) => s.trim())
+    .filter((s) => s.length > 8 && s.length < 280);
+
+  const hits = sentences.filter((s) => metaPattern.test(s)).slice(0, 20);
+  if (!hits.length) return text;
+
+  const prioritized = Array.from(new Set(hits)).join(" | ");
+  return `Job meta hints: ${prioritized}\n\n${text}`;
+}
+
+function normalizeExtracted(data: ExtractedJob): ExtractedJob {
+  const clean = (value?: string | null) => {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  };
+  return {
+    company: clean(data.company),
+    jobTitle: clean(data.jobTitle),
+    location: clean(data.location),
+    salary: clean(data.salary),
+    jobLink: clean(data.jobLink),
+    notes: clean(data.notes),
+    deadline: clean(data.deadline),
+  };
+}
+
 async function fetchPageText(url: string): Promise<string> {
   const res = await fetch(url, {
     headers: {
@@ -160,8 +207,7 @@ async function fetchPageText(url: string): Promise<string> {
       "That page returned little usable text (often blocked). Try dropping a screenshot instead."
     );
   }
-  // Keep prompts small to stay under free-tier token limits
-  return text.slice(0, 6000);
+  return prioritizeMetaSnippets(text).slice(0, 10000);
 }
 
 export async function extractFromUrl(url: string): Promise<ExtractedJob> {
@@ -182,7 +228,7 @@ export async function extractFromUrl(url: string): Promise<ExtractedJob> {
     `Page content:\n${pageText}`,
   ]);
 
-  const extracted = parseGeminiJson(text);
+  const extracted = normalizeExtracted(parseGeminiJson(text));
   return {
     ...extracted,
     jobLink: extracted.jobLink || parsedUrl.toString(),
@@ -215,7 +261,7 @@ export async function extractFromImage(
 
   const text = await generateWithFallback([
     EXTRACTION_PROMPT,
-    "The content is a screenshot of a job posting.",
+    "This is a screenshot of a job posting. Read visible location and salary/compensation text carefully.",
     {
       inlineData: {
         mimeType: mimeType === "image/jpg" ? "image/jpeg" : mimeType,
@@ -224,7 +270,7 @@ export async function extractFromImage(
     },
   ]);
 
-  return parseGeminiJson(text);
+  return normalizeExtracted(parseGeminiJson(text));
 }
 
 export function isGeminiConfigured(): boolean {

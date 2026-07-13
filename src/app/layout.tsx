@@ -7,7 +7,7 @@ import { Sidebar, MobileHeader } from "@/components/layout/sidebar";
 import "./globals.css";
 
 const geistSans = Geist({
-  variable: "--font-sans",
+  variable: "--font-geist-sans",
   subsets: ["latin"],
 });
 
@@ -44,7 +44,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${geistSans.variable} ${geistMono.variable} min-h-screen`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-sans antialiased`}
+      >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <TooltipProvider>
             <div className="flex min-h-screen">

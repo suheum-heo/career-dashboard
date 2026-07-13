@@ -3,33 +3,14 @@ import { extractedJobSchema, type ExtractedJob } from "@/lib/validations";
 
 export type { ExtractedJob };
 
-const EXTRACTION_PROMPT = `Extract job application details from the provided content.
-Return ONLY valid JSON with these keys (use null when unknown):
-{
-  "company": string | null,
-  "jobTitle": string | null,
-  "location": string | null,
-  "salary": string | null,
-  "jobLink": string | null,
-  "notes": string | null,
-  "deadline": string | null
-}
-
-Rules:
-- company: employer / organization name
-- jobTitle: role title only
-- location: city/region/remote as shown
-- salary: keep the original format if present (e.g. "$50/hr", "$120k-$150k")
-- jobLink: full URL if present
-- notes: 1-2 short helpful lines (team, requirements highlights). Do not invent facts.
-- deadline: ISO date YYYY-MM-DD if an application deadline is clearly stated, else null
-- Do not invent company or title. Prefer null over guesses.`;
+const EXTRACTION_PROMPT = `Extract job details. Return ONLY JSON:
+{"company":string|null,"jobTitle":string|null,"location":string|null,"salary":string|null,"jobLink":string|null,"notes":string|null,"deadline":string|null}
+deadline must be YYYY-MM-DD or null. Prefer null over guessing. notes: one short line max.`;
 
 /** Prefer Flash-Lite for free-tier headroom; override with GEMINI_MODEL. */
 const DEFAULT_MODELS = [
   "gemini-2.5-flash-lite",
   "gemini-2.5-flash",
-  "gemini-2.0-flash-lite",
 ];
 
 function getGemini() {
@@ -60,10 +41,6 @@ function getModel(modelName: string) {
   });
 }
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 function isQuotaError(err: unknown): boolean {
   const message = err instanceof Error ? err.message : String(err);
   return (
@@ -74,17 +51,26 @@ function isQuotaError(err: unknown): boolean {
   );
 }
 
+function isModelMissingError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  return message.includes("404") || message.toLowerCase().includes("not found");
+}
+
 function friendlyQuotaError(err: unknown): Error {
   const message = err instanceof Error ? err.message : String(err);
   const retryMatch = message.match(/retry in ([\d.]+)s/i);
   const wait = retryMatch ? Math.ceil(Number(retryMatch[1])) : null;
   return new Error(
     wait
-      ? `Gemini free-tier quota hit. Wait ~${wait}s and try again, or set GEMINI_MODEL to another Flash model in Vercel.`
-      : "Gemini free-tier quota hit. Wait a minute and try again, or switch GEMINI_MODEL (e.g. gemini-2.5-flash)."
+      ? `Gemini rate limit — wait ~${wait}s, then try once. If this keeps happening, create a new API key in a new Google AI Studio project (quotas are per project).`
+      : "Gemini free-tier limit reached. Wait a bit, or create a new API key in a new AI Studio project."
   );
 }
 
+/**
+ * Try one primary model. Only fall back if the model is missing (404),
+ * never on 429 — cascading retries burns free-tier quota faster.
+ */
 async function generateWithFallback(
   parts: Parameters<ReturnType<typeof getModel>["generateContent"]>[0]
 ): Promise<string> {
@@ -92,27 +78,18 @@ async function generateWithFallback(
   let lastError: unknown;
 
   for (const modelName of models) {
-    for (let attempt = 0; attempt < 2; attempt++) {
-      try {
-        const result = await getModel(modelName).generateContent(parts);
-        return result.response.text();
-      } catch (err) {
-        lastError = err;
-        if (isQuotaError(err) && attempt === 0) {
-          await sleep(2000);
-          continue;
-        }
-        // Try next model on quota / not found
-        const msg = err instanceof Error ? err.message : String(err);
-        if (
-          isQuotaError(err) ||
-          msg.includes("404") ||
-          msg.includes("not found")
-        ) {
-          break;
-        }
-        throw err;
+    try {
+      const result = await getModel(modelName).generateContent(parts);
+      return result.response.text();
+    } catch (err) {
+      lastError = err;
+      if (isQuotaError(err)) {
+        throw friendlyQuotaError(err);
       }
+      if (isModelMissingError(err)) {
+        continue;
+      }
+      throw err;
     }
   }
 
@@ -176,8 +153,8 @@ async function fetchPageText(url: string): Promise<string> {
       "That page returned little usable text (often blocked). Try dropping a screenshot instead."
     );
   }
-  // Keep prompts smaller to reduce free-tier token burn
-  return text.slice(0, 12000);
+  // Keep prompts small to stay under free-tier token limits
+  return text.slice(0, 6000);
 }
 
 export async function extractFromUrl(url: string): Promise<ExtractedJob> {

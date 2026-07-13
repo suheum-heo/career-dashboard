@@ -25,3 +25,15 @@ export const applicationSchema = z.object({
 });
 
 export type ApplicationFormValues = z.infer<typeof applicationSchema>;
+
+export const extractedJobSchema = z.object({
+  company: z.string().nullable().optional(),
+  jobTitle: z.string().nullable().optional(),
+  location: z.string().nullable().optional(),
+  salary: z.string().nullable().optional(),
+  jobLink: z.string().nullable().optional(),
+  notes: z.string().nullable().optional(),
+  deadline: z.string().nullable().optional(),
+});
+
+export type ExtractedJob = z.infer<typeof extractedJobSchema>;

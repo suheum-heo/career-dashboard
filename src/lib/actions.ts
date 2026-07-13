@@ -6,6 +6,11 @@ import { prisma } from "@/lib/prisma";
 import { applicationSchema } from "@/lib/validations";
 import { parseOptionalDate } from "@/lib/analytics";
 import { PAGE_SIZE } from "@/lib/constants";
+import {
+  extractFromImage,
+  extractFromUrl,
+  isGeminiConfigured,
+} from "@/lib/extract-job";
 
 export type ApplicationListParams = {
   search?: string;
@@ -204,4 +209,45 @@ export async function deleteApplications(ids: string[]) {
   revalidatePath("/analytics");
   revalidatePath("/calendar");
   return { success: true, count: result.count };
+}
+
+export async function getGeminiConfigured() {
+  return isGeminiConfigured();
+}
+
+export async function importFromJobUrl(url: string) {
+  try {
+    if (!isGeminiConfigured()) {
+      return {
+        error:
+          "GEMINI_API_KEY is not configured. Add it to .env and Vercel environment variables.",
+      };
+    }
+    const data = await extractFromUrl(url.trim());
+    return { data };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Failed to import from URL",
+    };
+  }
+}
+
+export async function importFromJobImage(input: {
+  base64: string;
+  mimeType: string;
+}) {
+  try {
+    if (!isGeminiConfigured()) {
+      return {
+        error:
+          "GEMINI_API_KEY is not configured. Add it to .env and Vercel environment variables.",
+      };
+    }
+    const data = await extractFromImage(input.base64, input.mimeType);
+    return { data };
+  } catch (err) {
+    return {
+      error: err instanceof Error ? err.message : "Failed to import from image",
+    };
+  }
 }

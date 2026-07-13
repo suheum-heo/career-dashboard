@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { TopBar } from "@/components/layout/sidebar";
 import { ApplicationForm } from "@/components/applications/application-form";
 import { Card, CardContent } from "@/components/ui/card";
-import { getApplication } from "@/lib/actions";
+import { getApplication, getGeminiConfigured } from "@/lib/actions";
 
 export default async function EditApplicationPage({
   params,
@@ -10,7 +10,10 @@ export default async function EditApplicationPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const application = await getApplication(id);
+  const [application, geminiConfigured] = await Promise.all([
+    getApplication(id),
+    getGeminiConfigured(),
+  ]);
   if (!application) notFound();
 
   return (
@@ -21,7 +24,10 @@ export default async function EditApplicationPage({
       />
       <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
         <CardContent className="p-6 sm:p-8">
-          <ApplicationForm application={application} />
+          <ApplicationForm
+            application={application}
+            geminiConfigured={geminiConfigured}
+          />
         </CardContent>
       </Card>
     </div>

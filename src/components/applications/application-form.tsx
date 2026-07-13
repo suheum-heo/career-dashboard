@@ -18,13 +18,27 @@ import {
 } from "@/components/ui/select";
 import { ALL_STATUSES, STATUS_LABELS } from "@/lib/constants";
 import { toDateInputValue } from "@/lib/analytics";
-import { createApplication, updateApplication, deleteApplication } from "@/lib/actions";
+import type { ExtractedJob } from "@/lib/validations";
+import {
+  createApplication,
+  updateApplication,
+  deleteApplication,
+} from "@/lib/actions";
+import { JobImport } from "@/components/applications/job-import";
 
 type Props = {
   application?: Application;
+  geminiConfigured?: boolean;
 };
 
-export function ApplicationForm({ application }: Props) {
+function emptyToValue(value?: string | null) {
+  return value ?? "";
+}
+
+export function ApplicationForm({
+  application,
+  geminiConfigured = false,
+}: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [status, setStatus] = useState<ApplicationStatus>(
@@ -32,24 +46,51 @@ export function ApplicationForm({ application }: Props) {
   );
   const [referral, setReferral] = useState(application?.referral ?? false);
   const [coverLetter, setCoverLetter] = useState(application?.coverLetter ?? false);
+  const [company, setCompany] = useState(application?.company ?? "");
+  const [jobTitle, setJobTitle] = useState(application?.jobTitle ?? "");
+  const [location, setLocation] = useState(emptyToValue(application?.location));
+  const [dateApplied, setDateApplied] = useState(
+    toDateInputValue(application?.dateApplied)
+  );
+  const [salary, setSalary] = useState(emptyToValue(application?.salary));
+  const [jobLink, setJobLink] = useState(emptyToValue(application?.jobLink));
+  const [resumeVersion, setResumeVersion] = useState(
+    emptyToValue(application?.resumeVersion)
+  );
+  const [interviewDate, setInterviewDate] = useState(
+    toDateInputValue(application?.interviewDate)
+  );
+  const [deadline, setDeadline] = useState(toDateInputValue(application?.deadline));
+  const [notes, setNotes] = useState(emptyToValue(application?.notes));
+
+  function applyImport(data: ExtractedJob) {
+    if (data.company) setCompany(data.company);
+    if (data.jobTitle) setJobTitle(data.jobTitle);
+    if (data.location) setLocation(data.location);
+    if (data.salary) setSalary(data.salary);
+    if (data.jobLink) setJobLink(data.jobLink);
+    if (data.deadline) setDeadline(data.deadline);
+    if (data.notes) {
+      setNotes((prev) => (prev.trim() ? `${prev.trim()}\n\n${data.notes}` : data.notes!));
+    }
+  }
 
   function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = new FormData(e.currentTarget);
     const payload = {
-      company: String(form.get("company") ?? ""),
-      jobTitle: String(form.get("jobTitle") ?? ""),
-      location: String(form.get("location") ?? "") || null,
-      dateApplied: String(form.get("dateApplied") ?? "") || null,
+      company,
+      jobTitle,
+      location: location || null,
+      dateApplied: dateApplied || null,
       status,
-      salary: String(form.get("salary") ?? "") || null,
+      salary: salary || null,
       referral,
-      jobLink: String(form.get("jobLink") ?? "") || null,
-      resumeVersion: String(form.get("resumeVersion") ?? "") || null,
+      jobLink: jobLink || null,
+      resumeVersion: resumeVersion || null,
       coverLetter,
-      notes: String(form.get("notes") ?? "") || null,
-      interviewDate: String(form.get("interviewDate") ?? "") || null,
-      deadline: String(form.get("deadline") ?? "") || null,
+      notes: notes || null,
+      interviewDate: interviewDate || null,
+      deadline: deadline || null,
     };
 
     startTransition(async () => {
@@ -81,13 +122,16 @@ export function ApplicationForm({ application }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="space-y-8">
+      <JobImport enabled={geminiConfigured} onImported={applyImport} />
+
       <div className="grid gap-5 sm:grid-cols-2">
         <Field label="Company" htmlFor="company" required>
           <Input
             id="company"
             name="company"
             required
-            defaultValue={application?.company ?? ""}
+            value={company}
+            onChange={(e) => setCompany(e.target.value)}
             className="h-10 rounded-xl"
             placeholder="Apple"
           />
@@ -97,7 +141,8 @@ export function ApplicationForm({ application }: Props) {
             id="jobTitle"
             name="jobTitle"
             required
-            defaultValue={application?.jobTitle ?? ""}
+            value={jobTitle}
+            onChange={(e) => setJobTitle(e.target.value)}
             className="h-10 rounded-xl"
             placeholder="Software Engineer Intern"
           />
@@ -106,7 +151,8 @@ export function ApplicationForm({ application }: Props) {
           <Input
             id="location"
             name="location"
-            defaultValue={application?.location ?? ""}
+            value={location}
+            onChange={(e) => setLocation(e.target.value)}
             className="h-10 rounded-xl"
             placeholder="Cupertino, CA"
           />
@@ -116,7 +162,8 @@ export function ApplicationForm({ application }: Props) {
             id="dateApplied"
             name="dateApplied"
             type="date"
-            defaultValue={toDateInputValue(application?.dateApplied)}
+            value={dateApplied}
+            onChange={(e) => setDateApplied(e.target.value)}
             className="h-10 rounded-xl"
           />
         </Field>
@@ -141,7 +188,8 @@ export function ApplicationForm({ application }: Props) {
           <Input
             id="salary"
             name="salary"
-            defaultValue={application?.salary ?? ""}
+            value={salary}
+            onChange={(e) => setSalary(e.target.value)}
             className="h-10 rounded-xl"
             placeholder="$50/hr or $120k"
           />
@@ -151,7 +199,8 @@ export function ApplicationForm({ application }: Props) {
             id="jobLink"
             name="jobLink"
             type="url"
-            defaultValue={application?.jobLink ?? ""}
+            value={jobLink}
+            onChange={(e) => setJobLink(e.target.value)}
             className="h-10 rounded-xl"
             placeholder="https://..."
           />
@@ -160,7 +209,8 @@ export function ApplicationForm({ application }: Props) {
           <Input
             id="resumeVersion"
             name="resumeVersion"
-            defaultValue={application?.resumeVersion ?? ""}
+            value={resumeVersion}
+            onChange={(e) => setResumeVersion(e.target.value)}
             className="h-10 rounded-xl"
             placeholder="v3-swe"
           />
@@ -170,7 +220,8 @@ export function ApplicationForm({ application }: Props) {
             id="interviewDate"
             name="interviewDate"
             type="date"
-            defaultValue={toDateInputValue(application?.interviewDate)}
+            value={interviewDate}
+            onChange={(e) => setInterviewDate(e.target.value)}
             className="h-10 rounded-xl"
           />
         </Field>
@@ -179,7 +230,8 @@ export function ApplicationForm({ application }: Props) {
             id="deadline"
             name="deadline"
             type="date"
-            defaultValue={toDateInputValue(application?.deadline)}
+            value={deadline}
+            onChange={(e) => setDeadline(e.target.value)}
             className="h-10 rounded-xl"
           />
         </Field>
@@ -206,7 +258,8 @@ export function ApplicationForm({ application }: Props) {
         <Textarea
           id="notes"
           name="notes"
-          defaultValue={application?.notes ?? ""}
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
           className="min-h-28 rounded-xl"
           placeholder="Follow-ups, contacts, impressions…"
         />

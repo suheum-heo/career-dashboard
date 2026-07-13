@@ -27,11 +27,13 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      { url: "/favicon.ico", sizes: "any" },
-      { url: "/favicon.svg", type: "image/svg+xml" },
-      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+      // Cache-bust query helps Safari drop the old Vercel favicon
+      { url: "/favicon.ico?v=3", sizes: "any" },
+      { url: "/favicon.svg?v=3", type: "image/svg+xml" },
+      { url: "/icon.png?v=3", type: "image/png", sizes: "32x32" },
     ],
-    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
+    apple: [{ url: "/apple-icon?v=3", type: "image/png", sizes: "180x180" }],
+    shortcut: "/favicon.ico?v=3",
   },
 };
 

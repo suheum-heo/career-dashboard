@@ -20,6 +20,11 @@ export const metadata: Metadata = {
   title: "CareerTrack — Job Application Dashboard",
   description:
     "Track internship and full-time applications with analytics, calendar, and pipeline insights.",
+  applicationName: "CareerTrack",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-icon", type: "image/png" }],
+  },
 };
 
 export default function RootLayout({

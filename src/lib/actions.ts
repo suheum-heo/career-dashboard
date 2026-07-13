@@ -189,3 +189,19 @@ export async function deleteApplication(id: string) {
   revalidatePath("/calendar");
   return { success: true };
 }
+
+export async function deleteApplications(ids: string[]) {
+  if (!ids.length) {
+    return { error: "No applications selected" };
+  }
+
+  const result = await prisma.application.deleteMany({
+    where: { id: { in: ids } },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/applications");
+  revalidatePath("/analytics");
+  revalidatePath("/calendar");
+  return { success: true, count: result.count };
+}

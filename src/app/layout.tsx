@@ -21,9 +21,17 @@ export const metadata: Metadata = {
   description:
     "Track internship and full-time applications with analytics, calendar, and pipeline insights.",
   applicationName: "CareerTrack",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#007AFF" },
+    { media: "(prefers-color-scheme: dark)", color: "#0A84FF" },
+  ],
   icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-    apple: [{ url: "/apple-icon", type: "image/png" }],
+    icon: [
+      { url: "/favicon.ico", sizes: "any" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/icon.png", type: "image/png", sizes: "32x32" },
+    ],
+    apple: [{ url: "/apple-icon", type: "image/png", sizes: "180x180" }],
   },
 };
 

@@ -21,6 +21,7 @@ import {
   METRIC_LABELS,
   STATUS_LABELS,
 } from "@/lib/constants";
+import { signalNavigation } from "@/lib/navigation";
 
 export function ApplicationFilters({
   locations,
@@ -53,6 +54,7 @@ export function ApplicationFilters({
     });
     params.delete("page");
     startTransition(() => {
+      signalNavigation();
       router.push(`${pathname}?${params.toString()}`);
     });
   }
@@ -82,7 +84,7 @@ export function ApplicationFilters({
 
   return (
     <div
-      className={`flex flex-col gap-3 ${isPending ? "opacity-70" : ""}`}
+      className={`flex flex-col gap-3 ${isPending ? "pointer-events-none cursor-wait opacity-70" : ""}`}
     >
       {activeMetric ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-sm">

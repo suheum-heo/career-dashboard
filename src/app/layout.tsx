@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { Geist, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "@/components/theme-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar, MobileHeader } from "@/components/layout/sidebar";
+import { NavigationProgress } from "@/components/navigation-progress";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -49,6 +51,9 @@ export default function RootLayout({
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <TooltipProvider>
+            <Suspense fallback={null}>
+              <NavigationProgress />
+            </Suspense>
             <div className="flex min-h-screen">
               <Sidebar />
               <div className="flex min-w-0 flex-1 flex-col">

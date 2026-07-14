@@ -136,3 +136,16 @@
     @apply font-sans;
   }
 }
+
+@keyframes nav-progress {
+  0% {
+    transform: translateX(-120%);
+  }
+  100% {
+    transform: translateX(420%);
+  }
+}
+
+@utility animate-nav-progress {
+  animation: nav-progress 1.1s ease-in-out infinite;
+}

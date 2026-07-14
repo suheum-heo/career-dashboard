@@ -28,6 +28,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/status-badge";
 import { deleteApplications } from "@/lib/actions";
 import { JOB_TYPE_LABELS } from "@/lib/constants";
+import { signalNavigation } from "@/lib/navigation";
 
 type Props = {
   items: Application[];
@@ -56,6 +57,7 @@ function SortHeader({
     const nextDir = current === column && dir === "asc" ? "desc" : "asc";
     params.set("sortBy", column);
     params.set("sortDir", nextDir);
+    signalNavigation();
     router.push(`${pathname}?${params.toString()}`);
   }
 
@@ -97,6 +99,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
   function goToPage(next: number) {
     const params = new URLSearchParams(searchParams.toString());
     params.set("page", String(next));
+    signalNavigation();
     router.push(`${pathname}?${params.toString()}`);
   }
 

@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ALL_JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/constants";
+import { signalNavigation } from "@/lib/navigation";
 import type { JobType } from "@prisma/client";
 
 const MONTHS = [
@@ -55,6 +56,7 @@ export function PeriodFilter({
       else params.set(key, value);
     });
     startTransition(() => {
+      signalNavigation();
       const qs = params.toString();
       router.push(qs ? `${pathname}?${qs}` : pathname);
     });
@@ -62,7 +64,7 @@ export function PeriodFilter({
 
   return (
     <div
-      className={`flex flex-wrap items-center gap-2 ${isPending ? "opacity-70" : ""}`}
+      className={`flex flex-wrap items-center gap-2 ${isPending ? "pointer-events-none cursor-wait opacity-70" : ""}`}
     >
       <Select
         value={jobType}

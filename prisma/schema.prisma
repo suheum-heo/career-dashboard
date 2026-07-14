@@ -27,24 +27,30 @@ enum JobType {
 }
 
 model Application {
-  id             String            @id @default(cuid())
-  company        String
-  jobTitle       String
-  location       String?
-  dateApplied    DateTime?
-  status         ApplicationStatus @default(WISHLIST)
-  jobType        JobType           @default(INTERNSHIP)
-  startYear      Int?
-  salary         String?
-  referral       Boolean           @default(false)
-  jobLink        String?
-  resumeVersion  String?
-  coverLetter    Boolean           @default(false)
-  notes          String?
-  interviewDate  DateTime?
-  deadline       DateTime?
-  createdAt      DateTime          @default(now())
-  updatedAt      DateTime          @updatedAt
+  id                String            @id @default(cuid())
+  company           String
+  jobTitle          String
+  location          String?
+  dateApplied       DateTime?
+  status            ApplicationStatus @default(WISHLIST)
+  jobType           JobType           @default(INTERNSHIP)
+  startYear         Int?
+  salary            String?
+  referral          Boolean           @default(false)
+  jobLink           String?
+  resumeVersion     String?
+  coverLetter       Boolean           @default(false)
+  notes             String?
+  interviewDate     DateTime?
+  deadline          DateTime?
+  /// Sticky: stays true after rejection/withdrawal if they ever reached interview stage
+  interviewReached  Boolean           @default(false)
+  /// Sticky: stays true if they ever received an offer
+  offerReceived     Boolean           @default(false)
+  /// Sticky: stays true if they ever got any response past applied
+  responseReceived  Boolean           @default(false)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
 
   @@index([status])
   @@index([dateApplied])
@@ -53,4 +59,7 @@ model Application {
   @@index([interviewDate])
   @@index([jobType])
   @@index([startYear])
+  @@index([interviewReached])
+  @@index([offerReceived])
+  @@index([responseReceived])
 }

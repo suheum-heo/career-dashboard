@@ -8,7 +8,6 @@ import {
   isValid,
 } from "date-fns";
 import {
-  METRIC_STATUSES,
   STATUS_LABELS,
   STATUS_CHART_COLORS,
   type ApplicationMetric,
@@ -124,20 +123,12 @@ export function formatPeriodLabel(period: PeriodFilter): string {
 export function computeStats(apps: Application[]): DashboardStats {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
   const total = submitted.length;
-  const interviews = apps.filter((a) =>
-    (METRIC_STATUSES.interviews as readonly ApplicationStatus[]).includes(
-      a.status
-    )
-  ).length;
-  const offers = apps.filter((a) => a.status === ApplicationStatus.OFFER).length;
+  const interviews = apps.filter((a) => a.interviewReached).length;
+  const offers = apps.filter((a) => a.offerReceived).length;
   const rejections = apps.filter(
     (a) => a.status === ApplicationStatus.REJECTED
   ).length;
-  const responses = apps.filter((a) =>
-    (METRIC_STATUSES.responses as readonly ApplicationStatus[]).includes(
-      a.status
-    )
-  ).length;
+  const responses = apps.filter((a) => a.responseReceived).length;
 
   return {
     total,

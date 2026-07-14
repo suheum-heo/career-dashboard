@@ -1,5 +1,6 @@
 import { PrismaClient, ApplicationStatus, JobType } from "@prisma/client";
 import { subDays, subMonths, addDays } from "date-fns";
+import { mergeMilestones } from "../src/lib/constants";
 
 const prisma = new PrismaClient();
 
@@ -69,6 +70,8 @@ async function main() {
       ? addDays(now, (i % 14) - 3)
       : null;
 
+    const milestones = mergeMilestones(status, {});
+
     return {
       ...c,
       status,
@@ -89,22 +92,29 @@ async function main() {
             : null,
       deadline:
         status === ApplicationStatus.WISHLIST ? addDays(now, 10 + (i % 20)) : null,
+      ...milestones,
     };
   });
 
   // Extra historical applications for charts
   const historical = Array.from({ length: 20 }).map((_, i) => {
     const base = companies[i % companies.length];
+    const status = [
+      ApplicationStatus.APPLIED,
+      ApplicationStatus.REJECTED,
+      ApplicationStatus.GHOSTED,
+      ApplicationStatus.OFFER,
+    ][i % 4];
+    // Some rejections still count as having interviewed
+    const milestones = mergeMilestones(status, {
+      interviewReached: status === ApplicationStatus.REJECTED && i % 2 === 0,
+      responseReceived: status === ApplicationStatus.GHOSTED ? false : undefined,
+    });
     return {
       company: base.company,
       jobTitle: "New Grad Software Engineer",
       location: base.location,
-      status: [
-        ApplicationStatus.APPLIED,
-        ApplicationStatus.REJECTED,
-        ApplicationStatus.GHOSTED,
-        ApplicationStatus.OFFER,
-      ][i % 4],
+      status,
       jobType: JobType.FULL_TIME,
       startYear: now.getFullYear() + (i % 3 === 0 ? 1 : 0),
       dateApplied: subMonths(now, 1 + (i % 6)),
@@ -116,6 +126,7 @@ async function main() {
       notes: null,
       interviewDate: null,
       deadline: null,
+      ...milestones,
     };
   });
 

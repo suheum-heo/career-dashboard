@@ -20,6 +20,8 @@ import {
   ALL_JOB_TYPES,
   ALL_STATUSES,
   JOB_TYPE_LABELS,
+  mergeMilestones,
+  milestonesFromStatus,
   STATUS_LABELS,
 } from "@/lib/constants";
 import { toDateInputValue } from "@/lib/analytics";
@@ -73,6 +75,31 @@ export function ApplicationForm({
   );
   const [deadline, setDeadline] = useState(toDateInputValue(application?.deadline));
   const [notes, setNotes] = useState(emptyToValue(application?.notes));
+  const initialMilestones = mergeMilestones(
+    application?.status ?? ApplicationStatus.WISHLIST,
+    {
+      interviewReached: application?.interviewReached,
+      offerReceived: application?.offerReceived,
+      responseReceived: application?.responseReceived,
+    }
+  );
+  const [interviewReached, setInterviewReached] = useState(
+    initialMilestones.interviewReached
+  );
+  const [offerReceived, setOfferReceived] = useState(
+    initialMilestones.offerReceived
+  );
+  const [responseReceived, setResponseReceived] = useState(
+    initialMilestones.responseReceived
+  );
+
+  function applyStatus(next: ApplicationStatus) {
+    setStatus(next);
+    const implied = milestonesFromStatus(next);
+    if (implied.interviewReached) setInterviewReached(true);
+    if (implied.offerReceived) setOfferReceived(true);
+    if (implied.responseReceived) setResponseReceived(true);
+  }
 
   function applyImport(data: ExtractedJob) {
     if (data.company) setCompany(data.company);
@@ -110,6 +137,9 @@ export function ApplicationForm({
       notes: notes || null,
       interviewDate: interviewDate || null,
       deadline: deadline || null,
+      interviewReached,
+      offerReceived,
+      responseReceived,
     };
 
     startTransition(async () => {
@@ -185,7 +215,7 @@ export function ApplicationForm({
         <Field label="Status" htmlFor="status">
           <Select
             value={status}
-            onValueChange={(v) => v && setStatus(v as ApplicationStatus)}
+            onValueChange={(v) => v && applyStatus(v as ApplicationStatus)}
           >
             <SelectTrigger id="status" className="h-10 w-full rounded-xl">
               <SelectValue />
@@ -290,6 +320,42 @@ export function ApplicationForm({
           />
           Cover Letter
         </label>
+      </div>
+
+      <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
+        <div>
+          <p className="text-sm font-medium">Milestones</p>
+          <p className="text-xs text-muted-foreground">
+            Sticky — stay checked after a rejection so rates stay accurate. Auto-set when
+            you move status forward; check manually for older apps.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-6">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={interviewReached}
+              onCheckedChange={(v) => setInterviewReached(Boolean(v))}
+              disabled={milestonesFromStatus(status).interviewReached}
+            />
+            Reached interview
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={offerReceived}
+              onCheckedChange={(v) => setOfferReceived(Boolean(v))}
+              disabled={milestonesFromStatus(status).offerReceived}
+            />
+            Received offer
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={responseReceived}
+              onCheckedChange={(v) => setResponseReceived(Boolean(v))}
+              disabled={milestonesFromStatus(status).responseReceived}
+            />
+            Got a response
+          </label>
+        </div>
       </div>
 
       <Field label="Notes" htmlFor="notes">

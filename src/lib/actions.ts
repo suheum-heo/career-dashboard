@@ -7,6 +7,7 @@ import { applicationSchema } from "@/lib/validations";
 import { parseOptionalDate } from "@/lib/analytics";
 import {
   isApplicationMetric,
+  mergeMilestones,
   METRIC_STATUSES,
   PAGE_SIZE,
 } from "@/lib/constants";
@@ -64,7 +65,15 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
   }
 
   if (params.metric && isApplicationMetric(params.metric)) {
-    where.status = { in: [...METRIC_STATUSES[params.metric]] };
+    if (params.metric === "interviews") {
+      where.interviewReached = true;
+    } else if (params.metric === "offers") {
+      where.offerReceived = true;
+    } else if (params.metric === "responses") {
+      where.responseReceived = true;
+    } else {
+      where.status = { in: [...METRIC_STATUSES[params.metric]] };
+    }
   } else if (params.status && params.status !== "ALL") {
     where.status = params.status as ApplicationStatus;
   }
@@ -188,6 +197,11 @@ export async function createApplication(raw: unknown) {
   }
 
   const data = parsed.data;
+  const milestones = mergeMilestones(data.status, {
+    interviewReached: data.interviewReached,
+    offerReceived: data.offerReceived,
+    responseReceived: data.responseReceived,
+  });
   const app = await prisma.application.create({
     data: {
       company: data.company,
@@ -205,6 +219,9 @@ export async function createApplication(raw: unknown) {
       notes: data.notes || null,
       interviewDate: parseOptionalDate(data.interviewDate),
       deadline: parseOptionalDate(data.deadline),
+      interviewReached: milestones.interviewReached,
+      offerReceived: milestones.offerReceived,
+      responseReceived: milestones.responseReceived,
     },
   });
 
@@ -222,6 +239,12 @@ export async function updateApplication(id: string, raw: unknown) {
   }
 
   const data = parsed.data;
+  const milestones = mergeMilestones(data.status, {
+    interviewReached: data.interviewReached,
+    offerReceived: data.offerReceived,
+    responseReceived: data.responseReceived,
+  });
+
   const app = await prisma.application.update({
     where: { id },
     data: {
@@ -240,6 +263,9 @@ export async function updateApplication(id: string, raw: unknown) {
       notes: data.notes || null,
       interviewDate: parseOptionalDate(data.interviewDate),
       deadline: parseOptionalDate(data.deadline),
+      interviewReached: milestones.interviewReached,
+      offerReceived: milestones.offerReceived,
+      responseReceived: milestones.responseReceived,
     },
   });
 

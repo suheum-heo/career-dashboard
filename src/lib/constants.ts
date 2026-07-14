@@ -139,3 +139,33 @@ export const METRIC_LABELS: Record<ApplicationMetric, string> = {
 export function isApplicationMetric(value: string): value is ApplicationMetric {
   return value in METRIC_STATUSES;
 }
+
+/** Milestones implied by the current status (used to auto-set sticky flags). */
+export function milestonesFromStatus(status: ApplicationStatus) {
+  return {
+    interviewReached: (
+      METRIC_STATUSES.interviews as readonly ApplicationStatus[]
+    ).includes(status),
+    offerReceived: status === ApplicationStatus.OFFER,
+    responseReceived: (
+      METRIC_STATUSES.responses as readonly ApplicationStatus[]
+    ).includes(status),
+  };
+}
+
+/** Status-derived flags always win as true; form flags can add historical credit. */
+export function mergeMilestones(
+  status: ApplicationStatus,
+  flags: {
+    interviewReached?: boolean;
+    offerReceived?: boolean;
+    responseReceived?: boolean;
+  }
+) {
+  const fromStatus = milestonesFromStatus(status);
+  return {
+    interviewReached: fromStatus.interviewReached || Boolean(flags.interviewReached),
+    offerReceived: fromStatus.offerReceived || Boolean(flags.offerReceived),
+    responseReceived: fromStatus.responseReceived || Boolean(flags.responseReceived),
+  };
+}

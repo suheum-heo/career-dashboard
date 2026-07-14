@@ -3,7 +3,7 @@ import { ApplicationStatus, JobType } from "@prisma/client";
 export const STATUS_LABELS: Record<ApplicationStatus, string> = {
   WISHLIST: "Wishlist",
   APPLIED: "Applied",
-  OA: "OA",
+  OA: "OA / 역량검사",
   RECRUITER_SCREEN: "Recruiter Screen",
   INTERVIEW: "Interview",
   FINAL_ROUND: "Final Round",
@@ -153,19 +153,28 @@ export function milestonesFromStatus(status: ApplicationStatus) {
   };
 }
 
-/** Status-derived flags always win as true; form flags can add historical credit. */
+/** Status-derived flags always win as true; form flags / interview date can add credit. */
 export function mergeMilestones(
   status: ApplicationStatus,
   flags: {
     interviewReached?: boolean;
     offerReceived?: boolean;
     responseReceived?: boolean;
+    interviewDate?: string | Date | null;
   }
 ) {
   const fromStatus = milestonesFromStatus(status);
+  const hasInterviewDate = Boolean(
+    flags.interviewDate &&
+      !(typeof flags.interviewDate === "string" && !flags.interviewDate.trim())
+  );
   return {
-    interviewReached: fromStatus.interviewReached || Boolean(flags.interviewReached),
+    interviewReached:
+      fromStatus.interviewReached ||
+      Boolean(flags.interviewReached) ||
+      hasInterviewDate,
     offerReceived: fromStatus.offerReceived || Boolean(flags.offerReceived),
-    responseReceived: fromStatus.responseReceived || Boolean(flags.responseReceived),
+    responseReceived:
+      fromStatus.responseReceived || Boolean(flags.responseReceived),
   };
 }

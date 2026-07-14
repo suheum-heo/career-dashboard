@@ -201,6 +201,7 @@ export async function createApplication(raw: unknown) {
     interviewReached: data.interviewReached,
     offerReceived: data.offerReceived,
     responseReceived: data.responseReceived,
+    interviewDate: data.interviewDate,
   });
   const app = await prisma.application.create({
     data: {
@@ -243,6 +244,7 @@ export async function updateApplication(id: string, raw: unknown) {
     interviewReached: data.interviewReached,
     offerReceived: data.offerReceived,
     responseReceived: data.responseReceived,
+    interviewDate: data.interviewDate,
   });
 
   const app = await prisma.application.update({

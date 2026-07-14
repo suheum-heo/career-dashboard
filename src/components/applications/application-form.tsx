@@ -81,6 +81,7 @@ export function ApplicationForm({
       interviewReached: application?.interviewReached,
       offerReceived: application?.offerReceived,
       responseReceived: application?.responseReceived,
+      interviewDate: application?.interviewDate,
     }
   );
   const [interviewReached, setInterviewReached] = useState(
@@ -294,8 +295,11 @@ export function ApplicationForm({
           label="Interview Date"
           id="interviewDate"
           value={interviewDate}
-          onChange={setInterviewDate}
-          hint="Leave blank if none scheduled"
+          onChange={(value) => {
+            setInterviewDate(value);
+            if (value) setInterviewReached(true);
+          }}
+          hint="Setting a date marks Reached interview"
         />
         <OptionalDateField
           label="Deadline"
@@ -326,8 +330,9 @@ export function ApplicationForm({
         <div>
           <p className="text-sm font-medium">Milestones</p>
           <p className="text-xs text-muted-foreground">
-            Sticky — stay checked after a rejection so rates stay accurate. Auto-set when
-            you move status forward; check manually for older apps.
+            Sticky — stay checked after a rejection so rates stay accurate. Auto-set
+            from status or interview date; use OA / 역량검사 for post-resume tests
+            (not interviews). Check manually for older apps if needed.
           </p>
         </div>
         <div className="flex flex-wrap gap-6">
@@ -335,7 +340,10 @@ export function ApplicationForm({
             <Checkbox
               checked={interviewReached}
               onCheckedChange={(v) => setInterviewReached(Boolean(v))}
-              disabled={milestonesFromStatus(status).interviewReached}
+              disabled={
+                milestonesFromStatus(status).interviewReached ||
+                Boolean(interviewDate)
+              }
             />
             Reached interview
           </label>

@@ -7,7 +7,12 @@ import {
   subMonths,
   isValid,
 } from "date-fns";
-import { STATUS_LABELS, STATUS_CHART_COLORS } from "./constants";
+import {
+  METRIC_STATUSES,
+  STATUS_LABELS,
+  STATUS_CHART_COLORS,
+  type ApplicationMetric,
+} from "./constants";
 
 export type DashboardStats = {
   total: number;
@@ -26,21 +31,19 @@ export type PeriodFilter = {
   startYear?: number | null;
 };
 
-const INTERVIEW_STATUSES: ApplicationStatus[] = [
-  ApplicationStatus.RECRUITER_SCREEN,
-  ApplicationStatus.INTERVIEW,
-  ApplicationStatus.FINAL_ROUND,
-  ApplicationStatus.OFFER,
-];
-
-const RESPONSE_STATUSES: ApplicationStatus[] = [
-  ApplicationStatus.OA,
-  ApplicationStatus.RECRUITER_SCREEN,
-  ApplicationStatus.INTERVIEW,
-  ApplicationStatus.FINAL_ROUND,
-  ApplicationStatus.OFFER,
-  ApplicationStatus.REJECTED,
-];
+/** Build /applications URL for a dashboard metric, preserving period filters. */
+export function applicationsHrefForMetric(
+  metric: ApplicationMetric,
+  period?: PeriodFilter
+): string {
+  const params = new URLSearchParams();
+  params.set("metric", metric);
+  if (period?.jobType) params.set("jobType", period.jobType);
+  if (period?.startYear) params.set("startYear", String(period.startYear));
+  if (period?.year) params.set("year", String(period.year));
+  if (period?.year && period?.month) params.set("month", String(period.month));
+  return `/applications?${params.toString()}`;
+}
 
 /** Prefer date applied; fall back to createdAt for wishlist / undated rows. */
 export function applicationDate(app: Application): Date {
@@ -122,14 +125,18 @@ export function computeStats(apps: Application[]): DashboardStats {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
   const total = submitted.length;
   const interviews = apps.filter((a) =>
-    INTERVIEW_STATUSES.includes(a.status)
+    (METRIC_STATUSES.interviews as readonly ApplicationStatus[]).includes(
+      a.status
+    )
   ).length;
   const offers = apps.filter((a) => a.status === ApplicationStatus.OFFER).length;
   const rejections = apps.filter(
     (a) => a.status === ApplicationStatus.REJECTED
   ).length;
   const responses = apps.filter((a) =>
-    RESPONSE_STATUSES.includes(a.status)
+    (METRIC_STATUSES.responses as readonly ApplicationStatus[]).includes(
+      a.status
+    )
   ).length;
 
   return {

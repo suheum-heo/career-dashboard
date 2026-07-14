@@ -5,7 +5,11 @@ import { ApplicationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applicationSchema } from "@/lib/validations";
 import { parseOptionalDate } from "@/lib/analytics";
-import { PAGE_SIZE } from "@/lib/constants";
+import {
+  isApplicationMetric,
+  METRIC_STATUSES,
+  PAGE_SIZE,
+} from "@/lib/constants";
 import {
   extractFromImage,
   extractFromUrl,
@@ -18,13 +22,38 @@ export type ApplicationListParams = {
   location?: string;
   jobType?: string;
   startYear?: string;
+  metric?: string;
+  year?: string;
+  month?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: number;
 };
 
+function appliedPeriodFilter(
+  year?: string,
+  month?: string
+): Prisma.ApplicationWhereInput | null {
+  const y = year ? Number(year) : NaN;
+  if (!Number.isFinite(y)) return null;
+  const m = month ? Number(month) : NaN;
+  const hasMonth = Number.isFinite(m) && m >= 1 && m <= 12;
+  const start = hasMonth ? new Date(y, m - 1, 1) : new Date(y, 0, 1);
+  const end = hasMonth ? new Date(y, m, 1) : new Date(y + 1, 0, 1);
+
+  return {
+    OR: [
+      { dateApplied: { gte: start, lt: end } },
+      {
+        AND: [{ dateApplied: null }, { createdAt: { gte: start, lt: end } }],
+      },
+    ],
+  };
+}
+
 function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput {
   const where: Prisma.ApplicationWhereInput = {};
+  const and: Prisma.ApplicationWhereInput[] = [];
 
   if (params.search) {
     where.OR = [
@@ -34,7 +63,9 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
     ];
   }
 
-  if (params.status && params.status !== "ALL") {
+  if (params.metric && isApplicationMetric(params.metric)) {
+    where.status = { in: [...METRIC_STATUSES[params.metric]] };
+  } else if (params.status && params.status !== "ALL") {
     where.status = params.status as ApplicationStatus;
   }
 
@@ -49,6 +80,13 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
   if (params.startYear && params.startYear !== "ALL") {
     const year = Number(params.startYear);
     if (Number.isFinite(year)) where.startYear = year;
+  }
+
+  const period = appliedPeriodFilter(params.year, params.month);
+  if (period) and.push(period);
+
+  if (and.length) {
+    where.AND = and;
   }
 
   return where;

@@ -102,3 +102,40 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
 export const ALL_JOB_TYPES = Object.values(JobType);
 
 export const PAGE_SIZE = 10;
+
+/** Status buckets used by dashboard/analytics rate cards. */
+export const METRIC_STATUSES = {
+  interviews: [
+    ApplicationStatus.RECRUITER_SCREEN,
+    ApplicationStatus.INTERVIEW,
+    ApplicationStatus.FINAL_ROUND,
+    ApplicationStatus.OFFER,
+  ],
+  offers: [ApplicationStatus.OFFER],
+  responses: [
+    ApplicationStatus.OA,
+    ApplicationStatus.RECRUITER_SCREEN,
+    ApplicationStatus.INTERVIEW,
+    ApplicationStatus.FINAL_ROUND,
+    ApplicationStatus.OFFER,
+    ApplicationStatus.REJECTED,
+  ],
+  rejections: [ApplicationStatus.REJECTED],
+  submitted: Object.values(ApplicationStatus).filter(
+    (s) => s !== ApplicationStatus.WISHLIST
+  ),
+} as const;
+
+export type ApplicationMetric = keyof typeof METRIC_STATUSES;
+
+export const METRIC_LABELS: Record<ApplicationMetric, string> = {
+  interviews: "Interviews",
+  offers: "Offers",
+  responses: "Responses",
+  rejections: "Rejections",
+  submitted: "Submitted applications",
+};
+
+export function isApplicationMetric(value: string): value is ApplicationMetric {
+  return value in METRIC_STATUSES;
+}

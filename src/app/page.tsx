@@ -21,6 +21,7 @@ import { getAllApplications, getRecentApplications } from "@/lib/actions";
 import {
   availableYears,
   availableStartYears,
+  applicationsHrefForMetric,
   chartDataForPeriod,
   computeStats,
   filterByPeriod,
@@ -95,6 +96,7 @@ export default async function DashboardPage({
           subtitle={`${stats.interviewRate}% interview rate`}
           icon={CalendarCheck2}
           accent="bg-amber-500/10 text-amber-600 dark:text-amber-400"
+          href={applicationsHrefForMetric("interviews", period)}
         />
         <StatCard
           title="Offers"
@@ -102,12 +104,14 @@ export default async function DashboardPage({
           subtitle={`${stats.offerRate}% offer rate`}
           icon={Gift}
           accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          href={applicationsHrefForMetric("offers", period)}
         />
         <StatCard
           title="Rejections"
           value={stats.rejections}
           icon={XCircle}
           accent="bg-rose-500/10 text-rose-600 dark:text-rose-400"
+          href={applicationsHrefForMetric("rejections", period)}
         />
         <StatCard
           title="Response Rate"
@@ -115,6 +119,7 @@ export default async function DashboardPage({
           subtitle="Any reply past applied"
           icon={Percent}
           accent="bg-sky-500/10 text-sky-600 dark:text-sky-400"
+          href={applicationsHrefForMetric("responses", period)}
         />
       </div>
 

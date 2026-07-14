@@ -14,6 +14,9 @@ type SearchParams = Promise<{
   location?: string;
   jobType?: string;
   startYear?: string;
+  metric?: string;
+  year?: string;
+  month?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: string;
@@ -34,6 +37,9 @@ export default async function ApplicationsPage({
       location: params.location,
       jobType: params.jobType,
       startYear: params.startYear,
+      metric: params.metric,
+      year: params.year,
+      month: params.month,
       sortBy: params.sortBy,
       sortDir: params.sortDir,
       page,

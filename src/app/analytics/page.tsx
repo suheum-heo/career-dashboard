@@ -17,6 +17,7 @@ import { getAllApplications } from "@/lib/actions";
 import {
   availableYears,
   availableStartYears,
+  applicationsHrefForMetric,
   chartDataForPeriod,
   computeStats,
   filterByPeriod,
@@ -79,18 +80,21 @@ export default async function AnalyticsPage({
           value={`${stats.interviewRate}%`}
           icon={CalendarCheck2}
           accent="bg-amber-500/10 text-amber-600 dark:text-amber-400"
+          href={applicationsHrefForMetric("interviews", period)}
         />
         <StatCard
           title="Offer rate"
           value={`${stats.offerRate}%`}
           icon={Gift}
           accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+          href={applicationsHrefForMetric("offers", period)}
         />
         <StatCard
           title="Response rate"
           value={`${stats.responseRate}%`}
           icon={Percent}
           accent="bg-sky-500/10 text-sky-600 dark:text-sky-400"
+          href={applicationsHrefForMetric("responses", period)}
         />
       </div>
 

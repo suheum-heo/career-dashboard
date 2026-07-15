@@ -13,13 +13,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLocale } from "@/components/locale-provider";
 import {
   ALL_JOB_TYPES,
   ALL_STATUSES,
   isApplicationMetric,
-  JOB_TYPE_LABELS,
-  METRIC_LABELS,
-  STATUS_LABELS,
 } from "@/lib/constants";
 import { signalNavigation } from "@/lib/navigation";
 
@@ -35,6 +33,7 @@ export function ApplicationFilters({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [search, setSearch] = useState(searchParams.get("search") ?? "");
+  const { t } = useLocale();
 
   const metricParam = searchParams.get("metric");
   const activeMetric =
@@ -77,8 +76,8 @@ export function ApplicationFilters({
   if (appliedYear) {
     periodBits.push(
       appliedMonth
-        ? `applied ${appliedYear}-${appliedMonth.padStart(2, "0")}`
-        : `applied ${appliedYear}`
+        ? `${t("common.applied")} ${appliedYear}-${appliedMonth.padStart(2, "0")}`
+        : `${t("common.applied")} ${appliedYear}`
     );
   }
 
@@ -88,8 +87,8 @@ export function ApplicationFilters({
     >
       {activeMetric ? (
         <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-sm">
-          <span className="text-muted-foreground">Showing</span>
-          <span className="font-medium">{METRIC_LABELS[activeMetric]}</span>
+          <span className="text-muted-foreground">{t("common.showing")}</span>
+          <span className="font-medium">{t(`metric.${activeMetric}`)}</span>
           {periodBits.length ? (
             <span className="text-muted-foreground">· {periodBits.join(" · ")}</span>
           ) : null}
@@ -101,7 +100,7 @@ export function ApplicationFilters({
             onClick={clearMetric}
           >
             <X className="size-3.5" />
-            Clear
+            {t("common.clear")}
           </Button>
         </div>
       ) : null}
@@ -112,7 +111,7 @@ export function ApplicationFilters({
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Search company, title, notes…"
+            placeholder={t("common.search")}
             className="h-10 rounded-xl pl-9"
           />
         </div>
@@ -124,16 +123,16 @@ export function ApplicationFilters({
             <SelectValue>
               {(value: string | null) =>
                 !value || value === "ALL"
-                  ? "All types"
-                  : (JOB_TYPE_LABELS[value as JobType] ?? value)
+                  ? t("common.allTypes")
+                  : t(`jobType.${value as JobType}`)
               }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All types</SelectItem>
+            <SelectItem value="ALL">{t("common.allTypes")}</SelectItem>
             {ALL_JOB_TYPES.map((type) => (
               <SelectItem key={type} value={type}>
-                {JOB_TYPE_LABELS[type]}
+                {t(`jobType.${type}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -145,15 +144,17 @@ export function ApplicationFilters({
           <SelectTrigger className="h-10 w-full rounded-xl sm:w-[160px]">
             <SelectValue>
               {(value: string | null) =>
-                !value || value === "ALL" ? "All start years" : `Start ${value}`
+                !value || value === "ALL"
+                  ? t("common.allStartYears")
+                  : `${t("common.start")} ${value}`
               }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All start years</SelectItem>
+            <SelectItem value="ALL">{t("common.allStartYears")}</SelectItem>
             {startYears.map((y) => (
               <SelectItem key={y} value={String(y)}>
-                Start {y}
+                {t("common.start")} {y}
               </SelectItem>
             ))}
           </SelectContent>
@@ -173,20 +174,20 @@ export function ApplicationFilters({
           <SelectTrigger className="h-10 w-full rounded-xl sm:w-[180px]">
             <SelectValue>
               {(value: string | null) => {
-                if (activeMetric) return METRIC_LABELS[activeMetric];
-                if (!value || value === "ALL") return "All statuses";
-                return STATUS_LABELS[value as ApplicationStatus] ?? value;
+                if (activeMetric) return t(`metric.${activeMetric}`);
+                if (!value || value === "ALL") return t("common.allStatuses");
+                return t(`status.${value as ApplicationStatus}`);
               }}
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
             {activeMetric ? (
-              <SelectItem value="METRIC">{METRIC_LABELS[activeMetric]}</SelectItem>
+              <SelectItem value="METRIC">{t(`metric.${activeMetric}`)}</SelectItem>
             ) : null}
-            <SelectItem value="ALL">All statuses</SelectItem>
+            <SelectItem value="ALL">{t("common.allStatuses")}</SelectItem>
             {ALL_STATUSES.map((status) => (
               <SelectItem key={status} value={status}>
-                {STATUS_LABELS[status as ApplicationStatus]}
+                {t(`status.${status}`)}
               </SelectItem>
             ))}
           </SelectContent>
@@ -198,12 +199,12 @@ export function ApplicationFilters({
           <SelectTrigger className="h-10 w-full rounded-xl sm:w-[200px]">
             <SelectValue>
               {(value: string | null) =>
-                !value || value === "ALL" ? "All locations" : value
+                !value || value === "ALL" ? t("common.allLocations") : value
               }
             </SelectValue>
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="ALL">All locations</SelectItem>
+            <SelectItem value="ALL">{t("common.allLocations")}</SelectItem>
             {locations.map((loc) => (
               <SelectItem key={loc} value={loc}>
                 {loc}

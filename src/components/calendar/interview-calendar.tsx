@@ -17,6 +17,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
+import { useLocale } from "@/components/locale-provider";
+import { dateFnsLocale } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -31,9 +33,21 @@ type DayEvent = {
   application: Application;
 };
 
+const WEEKDAY_KEYS = [
+  "mon",
+  "tue",
+  "wed",
+  "thu",
+  "fri",
+  "sat",
+  "sun",
+] as const;
+
 export function InterviewCalendar({ applications }: { applications: Application[] }) {
   const [month, setMonth] = useState(startOfMonth(new Date()));
   const [selected, setSelected] = useState<Date>(new Date());
+  const { locale, t } = useLocale();
+  const dfLocale = dateFnsLocale(locale);
 
   const events = useMemo(() => {
     const list: DayEvent[] = [];
@@ -75,7 +89,7 @@ export function InterviewCalendar({ applications }: { applications: Application[
       <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle className="text-base font-semibold">
-            {format(month, "MMMM yyyy")}
+            {format(month, "MMMM yyyy", { locale: dfLocale })}
           </CardTitle>
           <div className="flex gap-1">
             <Button
@@ -98,9 +112,9 @@ export function InterviewCalendar({ applications }: { applications: Application[
         </CardHeader>
         <CardContent>
           <div className="mb-2 grid grid-cols-7 gap-1 text-center text-xs font-medium text-muted-foreground">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map((d) => (
-              <div key={d} className="py-2">
-                {d}
+            {WEEKDAY_KEYS.map((key) => (
+              <div key={key} className="py-2">
+                {t(`weekdays.${key}`)}
               </div>
             ))}
           </div>
@@ -124,8 +138,13 @@ export function InterviewCalendar({ applications }: { applications: Application[
                       : "hover:bg-muted",
                     isToday(day) && !selectedDay && "ring-1 ring-primary/40"
                   )}
+                  aria-label={
+                    isToday(day) ? t("calendar.today") : undefined
+                  }
                 >
-                  <span className="mt-1 text-xs font-medium">{format(day, "d")}</span>
+                  <span className="mt-1 text-xs font-medium">
+                    {format(day, "d", { locale: dfLocale })}
+                  </span>
                   <div className="mt-1 flex gap-0.5">
                     {dayEvents.slice(0, 3).map((e) => (
                       <span
@@ -147,10 +166,12 @@ export function InterviewCalendar({ applications }: { applications: Application[
           </div>
           <div className="mt-4 flex gap-4 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-amber-500" /> Interview
+              <span className="size-2 rounded-full bg-amber-500" />{" "}
+              {t("calendar.interviews")}
             </span>
             <span className="inline-flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-rose-500" /> Deadline
+              <span className="size-2 rounded-full bg-rose-500" />{" "}
+              {t("calendar.deadlines")}
             </span>
           </div>
         </CardContent>
@@ -159,13 +180,18 @@ export function InterviewCalendar({ applications }: { applications: Application[
       <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
         <CardHeader className="pb-3">
           <CardTitle className="text-base font-semibold">
-            {format(selected, "EEEE, MMM d")}
+            {format(selected, "EEEE, MMM d", { locale: dfLocale })}
+            {isToday(selected) ? (
+              <span className="ml-2 text-sm font-normal text-muted-foreground">
+                · {t("calendar.today")}
+              </span>
+            ) : null}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {selectedEvents.length === 0 ? (
             <p className="py-10 text-center text-sm text-muted-foreground">
-              Nothing scheduled this day.
+              {t("calendar.empty")}
             </p>
           ) : (
             selectedEvents.map((event) => (
@@ -183,7 +209,9 @@ export function InterviewCalendar({ applications }: { applications: Application[
                         : "bg-rose-50 text-rose-700 dark:bg-rose-950/50 dark:text-rose-300"
                     )}
                   >
-                    {event.kind === "interview" ? "Interview" : "Deadline"}
+                    {event.kind === "interview"
+                      ? t("status.INTERVIEW")
+                      : t("applications.deadline")}
                   </span>
                   <StatusBadge status={event.application.status} />
                 </div>

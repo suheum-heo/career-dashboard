@@ -6,6 +6,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
 import { Sidebar, MobileHeader } from "@/components/layout/sidebar";
 import { NavigationProgress } from "@/components/navigation-progress";
+import { LocaleProvider } from "@/components/locale-provider";
+import { getLocale } from "@/i18n/server";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -29,7 +31,6 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      // Cache-bust query helps Safari drop the old Vercel favicon
       { url: "/favicon.ico?v=3", sizes: "any" },
       { url: "/favicon.svg?v=3", type: "image/svg+xml" },
       { url: "/icon.png?v=3", type: "image/png", sizes: "32x32" },
@@ -39,32 +40,36 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang={locale === "ko" ? "ko" : "en"} suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} min-h-screen font-sans antialiased`}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          <TooltipProvider>
-            <Suspense fallback={null}>
-              <NavigationProgress />
-            </Suspense>
-            <div className="flex min-h-screen">
-              <Sidebar />
-              <div className="flex min-w-0 flex-1 flex-col">
-                <MobileHeader />
-                <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                  <div className="mx-auto w-full max-w-7xl">{children}</div>
-                </main>
+          <LocaleProvider locale={locale}>
+            <TooltipProvider>
+              <Suspense fallback={null}>
+                <NavigationProgress />
+              </Suspense>
+              <div className="flex min-h-screen">
+                <Sidebar />
+                <div className="flex min-w-0 flex-1 flex-col">
+                  <MobileHeader />
+                  <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                    <div className="mx-auto w-full max-w-7xl">{children}</div>
+                  </main>
+                </div>
               </div>
-            </div>
-            <Toaster richColors position="top-right" />
-          </TooltipProvider>
+              <Toaster richColors position="top-right" />
+            </TooltipProvider>
+          </LocaleProvider>
         </ThemeProvider>
       </body>
     </html>

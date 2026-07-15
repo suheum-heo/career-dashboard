@@ -1,8 +1,12 @@
+"use client";
+
 import { ApplicationStatus } from "@prisma/client";
-import { STATUS_COLORS, STATUS_LABELS } from "@/lib/constants";
+import { STATUS_COLORS } from "@/lib/constants";
+import { useLocale } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 
 export function StatusBadge({ status }: { status: ApplicationStatus }) {
+  const { t } = useLocale();
   const colors = STATUS_COLORS[status];
   return (
     <span
@@ -13,7 +17,7 @@ export function StatusBadge({ status }: { status: ApplicationStatus }) {
       )}
     >
       <span className={cn("size-1.5 rounded-full", colors.dot)} />
-      {STATUS_LABELS[status]}
+      {t(`status.${status}`)}
     </span>
   );
 }

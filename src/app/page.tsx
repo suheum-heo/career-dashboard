@@ -29,6 +29,7 @@ import {
   parsePeriodFromSearchParams,
   statusDistribution,
 } from "@/lib/analytics";
+import { getTranslator } from "@/i18n/server";
 
 type SearchParams = Promise<{
   year?: string;
@@ -44,6 +45,7 @@ export default async function DashboardPage({
 }) {
   const params = await searchParams;
   const period = parsePeriodFromSearchParams(params);
+  const { locale, t } = await getTranslator();
 
   const [allApps, recent] = await Promise.all([
     getAllApplications(),
@@ -59,14 +61,14 @@ export default async function DashboardPage({
     period,
     6
   );
-  const statusData = statusDistribution(apps);
-  const periodLabel = formatPeriodLabel(period);
+  const statusData = statusDistribution(apps, t);
+  const periodLabel = formatPeriodLabel(period, t, locale);
 
   return (
     <div>
       <TopBar
-        title="Dashboard"
-        description={`Pipeline overview · ${periodLabel}`}
+        title={t("dashboard.title")}
+        description={t("dashboard.description", { period: periodLabel })}
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Suspense fallback={null}>
@@ -77,7 +79,7 @@ export default async function DashboardPage({
               className={cn(buttonVariants(), "h-9 rounded-xl")}
             >
               <Plus className="size-4" />
-              Add Application
+              {t("nav.addApplication")}
             </Link>
           </div>
         }
@@ -85,38 +87,38 @@ export default async function DashboardPage({
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         <StatCard
-          title="Total Applications"
+          title={t("dashboard.totalApplications")}
           value={stats.total}
-          subtitle="Excluding wishlist"
+          subtitle={t("dashboard.excludingWishlist")}
           icon={Briefcase}
         />
         <StatCard
-          title="Interviews"
+          title={t("dashboard.interviews")}
           value={stats.interviews}
-          subtitle={`${stats.interviewRate}% interview rate`}
+          subtitle={t("dashboard.interviewRate", { rate: stats.interviewRate })}
           icon={CalendarCheck2}
           accent="bg-amber-500/10 text-amber-600 dark:text-amber-400"
           href={applicationsHrefForMetric("interviews", period)}
         />
         <StatCard
-          title="Offers"
+          title={t("dashboard.offers")}
           value={stats.offers}
-          subtitle={`${stats.offerRate}% offer rate`}
+          subtitle={t("dashboard.offerRate", { rate: stats.offerRate })}
           icon={Gift}
           accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
           href={applicationsHrefForMetric("offers", period)}
         />
         <StatCard
-          title="Rejections"
+          title={t("dashboard.rejections")}
           value={stats.rejections}
           icon={XCircle}
           accent="bg-rose-500/10 text-rose-600 dark:text-rose-400"
           href={applicationsHrefForMetric("rejections", period)}
         />
         <StatCard
-          title="Response Rate"
+          title={t("dashboard.responseRate")}
           value={`${stats.responseRate}%`}
-          subtitle="Any reply past applied"
+          subtitle={t("dashboard.responseSubtitle")}
           icon={Percent}
           accent="bg-sky-500/10 text-sky-600 dark:text-sky-400"
           href={applicationsHrefForMetric("responses", period)}
@@ -127,7 +129,9 @@ export default async function DashboardPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] lg:col-span-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              {period.year ? `Applications in ${period.year}` : "Applications over time"}
+              {period.year
+                ? t("dashboard.appsInYear", { year: period.year })
+                : t("dashboard.appsOverTime")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -137,7 +141,7 @@ export default async function DashboardPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] lg:col-span-2">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              Status distribution
+              {t("dashboard.statusDistribution")}
             </CardTitle>
           </CardHeader>
           <CardContent>

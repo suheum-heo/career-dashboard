@@ -27,6 +27,7 @@ import {
   pipelineFunnel,
   sankeyData,
 } from "@/lib/analytics";
+import { getTranslator } from "@/i18n/server";
 
 type SearchParams = Promise<{
   year?: string;
@@ -42,6 +43,7 @@ export default async function AnalyticsPage({
 }) {
   const params = await searchParams;
   const period = parsePeriodFromSearchParams(params);
+  const { locale, t } = await getTranslator();
   const allApps = await getAllApplications();
   const years = availableYears(allApps);
   const startYears = availableStartYears(allApps);
@@ -52,16 +54,16 @@ export default async function AnalyticsPage({
     period,
     8
   );
-  const locations = locationCounts(apps);
-  const funnel = pipelineFunnel(apps);
-  const sankey = sankeyData(apps);
-  const periodLabel = formatPeriodLabel(period);
+  const locations = locationCounts(apps, 8, t);
+  const funnel = pipelineFunnel(apps, t);
+  const sankey = sankeyData(apps, t);
+  const periodLabel = formatPeriodLabel(period, t, locale);
 
   return (
     <div>
       <TopBar
-        title="Analytics"
-        description={`Conversion, geography, and pipeline · ${periodLabel}`}
+        title={t("analytics.title")}
+        description={t("analytics.description", { period: periodLabel })}
         actions={
           <Suspense fallback={null}>
             <PeriodFilter years={years} startYears={startYears} />
@@ -71,27 +73,30 @@ export default async function AnalyticsPage({
 
       <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <StatCard
-          title="Applications"
+          title={t("analytics.applications")}
           value={stats.total}
           icon={Briefcase}
         />
         <StatCard
-          title="Interview rate"
+          title={t("analytics.interviewRate")}
           value={`${stats.interviewRate}%`}
+          subtitle={t("common.viewApplications")}
           icon={CalendarCheck2}
           accent="bg-amber-500/10 text-amber-600 dark:text-amber-400"
           href={applicationsHrefForMetric("interviews", period)}
         />
         <StatCard
-          title="Offer rate"
+          title={t("analytics.offerRate")}
           value={`${stats.offerRate}%`}
+          subtitle={t("common.viewApplications")}
           icon={Gift}
           accent="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
           href={applicationsHrefForMetric("offers", period)}
         />
         <StatCard
-          title="Response rate"
+          title={t("analytics.responseRate")}
           value={`${stats.responseRate}%`}
+          subtitle={t("common.viewApplications")}
           icon={Percent}
           accent="bg-sky-500/10 text-sky-600 dark:text-sky-400"
           href={applicationsHrefForMetric("responses", period)}
@@ -102,7 +107,9 @@ export default async function AnalyticsPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              {period.year ? `Applications in ${period.year}` : "Applications over time"}
+              {period.year
+                ? t("dashboard.appsInYear", { year: period.year })
+                : t("dashboard.appsOverTime")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -112,7 +119,7 @@ export default async function AnalyticsPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              Most common locations
+              {t("analytics.byLocation")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -125,7 +132,7 @@ export default async function AnalyticsPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              Hiring funnel
+              {t("analytics.funnel")}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -135,7 +142,7 @@ export default async function AnalyticsPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              Pipeline flow
+              {t("analytics.sankey")}
             </CardTitle>
           </CardHeader>
           <CardContent>

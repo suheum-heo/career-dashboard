@@ -7,6 +7,7 @@ import { ApplicationsTable } from "@/components/applications/applications-table"
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getApplications, getLocations, getStartYears } from "@/lib/actions";
+import { getTranslator } from "@/i18n/server";
 
 type SearchParams = Promise<{
   search?: string;
@@ -29,6 +30,7 @@ export default async function ApplicationsPage({
 }) {
   const params = await searchParams;
   const page = Number(params.page ?? "1") || 1;
+  const { t } = await getTranslator();
 
   const [result, locations, startYears] = await Promise.all([
     getApplications({
@@ -51,15 +53,15 @@ export default async function ApplicationsPage({
   return (
     <div>
       <TopBar
-        title="Applications"
-        description="Search, filter, and manage every opportunity."
+        title={t("applications.title")}
+        description={t("applications.description")}
         actions={
           <Link
             href="/applications/new"
             className={cn(buttonVariants(), "h-9 rounded-xl")}
           >
             <Plus className="size-4" />
-            Add Application
+            {t("nav.addApplication")}
           </Link>
         }
       />

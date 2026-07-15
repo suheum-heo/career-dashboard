@@ -32,8 +32,6 @@ export function StatCard({
           <p className="text-3xl font-semibold tracking-tight">{value}</p>
           {subtitle ? (
             <p className="text-xs text-muted-foreground">{subtitle}</p>
-          ) : href ? (
-            <p className="text-xs text-muted-foreground">View applications →</p>
           ) : null}
         </div>
         <div

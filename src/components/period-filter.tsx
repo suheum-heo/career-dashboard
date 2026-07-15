@@ -9,28 +9,25 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { ALL_JOB_TYPES, JOB_TYPE_LABELS } from "@/lib/constants";
+import { useLocale } from "@/components/locale-provider";
+import { ALL_JOB_TYPES } from "@/lib/constants";
 import { signalNavigation } from "@/lib/navigation";
 import type { JobType } from "@prisma/client";
 
-const MONTHS = [
-  { value: "1", label: "January" },
-  { value: "2", label: "February" },
-  { value: "3", label: "March" },
-  { value: "4", label: "April" },
-  { value: "5", label: "May" },
-  { value: "6", label: "June" },
-  { value: "7", label: "July" },
-  { value: "8", label: "August" },
-  { value: "9", label: "September" },
-  { value: "10", label: "October" },
-  { value: "11", label: "November" },
-  { value: "12", label: "December" },
-];
-
-const MONTH_LABELS: Record<string, string> = Object.fromEntries(
-  MONTHS.map((m) => [m.value, m.label])
-);
+const MONTH_VALUES = [
+  "1",
+  "2",
+  "3",
+  "4",
+  "5",
+  "6",
+  "7",
+  "8",
+  "9",
+  "10",
+  "11",
+  "12",
+] as const;
 
 export function PeriodFilter({
   years,
@@ -43,6 +40,7 @@ export function PeriodFilter({
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
+  const { t } = useLocale();
 
   const year = searchParams.get("year") ?? "ALL";
   const month = searchParams.get("month") ?? "ALL";
@@ -76,16 +74,16 @@ export function PeriodFilter({
           <SelectValue>
             {(value: string | null) =>
               !value || value === "ALL"
-                ? "All types"
-                : (JOB_TYPE_LABELS[value as JobType] ?? value)
+                ? t("common.allTypes")
+                : t(`jobType.${value as JobType}`)
             }
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All types</SelectItem>
-          {ALL_JOB_TYPES.map((t) => (
-            <SelectItem key={t} value={t}>
-              {JOB_TYPE_LABELS[t]}
+          <SelectItem value="ALL">{t("common.allTypes")}</SelectItem>
+          {ALL_JOB_TYPES.map((type) => (
+            <SelectItem key={type} value={type}>
+              {t(`jobType.${type}`)}
             </SelectItem>
           ))}
         </SelectContent>
@@ -100,15 +98,17 @@ export function PeriodFilter({
         <SelectTrigger className="h-9 min-w-[150px] rounded-xl">
           <SelectValue>
             {(value: string | null) =>
-              !value || value === "ALL" ? "All start years" : `Start ${value}`
+              !value || value === "ALL"
+                ? t("common.allStartYears")
+                : `${t("common.start")} ${value}`
             }
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All start years</SelectItem>
+          <SelectItem value="ALL">{t("common.allStartYears")}</SelectItem>
           {startYears.map((y) => (
             <SelectItem key={y} value={String(y)}>
-              Start {y}
+              {t("common.start")} {y}
             </SelectItem>
           ))}
         </SelectContent>
@@ -128,15 +128,17 @@ export function PeriodFilter({
         <SelectTrigger className="h-9 min-w-[140px] rounded-xl">
           <SelectValue>
             {(value: string | null) =>
-              !value || value === "ALL" ? "All applied" : `Applied ${value}`
+              !value || value === "ALL"
+                ? t("common.allApplied")
+                : `${t("common.applied")} ${value}`
             }
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All applied</SelectItem>
+          <SelectItem value="ALL">{t("common.allApplied")}</SelectItem>
           {years.map((y) => (
             <SelectItem key={y} value={String(y)}>
-              Applied {y}
+              {t("common.applied")} {y}
             </SelectItem>
           ))}
         </SelectContent>
@@ -153,16 +155,16 @@ export function PeriodFilter({
           <SelectValue>
             {(value: string | null) =>
               !value || value === "ALL"
-                ? "All months"
-                : (MONTH_LABELS[value] ?? value)
+                ? t("common.allMonths")
+                : t(`months.${value as (typeof MONTH_VALUES)[number]}`)
             }
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="ALL">All months</SelectItem>
-          {MONTHS.map((m) => (
-            <SelectItem key={m.value} value={m.value}>
-              {m.label}
+          <SelectItem value="ALL">{t("common.allMonths")}</SelectItem>
+          {MONTH_VALUES.map((m) => (
+            <SelectItem key={m} value={m}>
+              {t(`months.${m}`)}
             </SelectItem>
           ))}
         </SelectContent>

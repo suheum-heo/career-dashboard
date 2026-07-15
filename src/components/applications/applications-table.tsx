@@ -26,8 +26,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusBadge } from "@/components/status-badge";
+import { useLocale } from "@/components/locale-provider";
+import { dateFnsLocale } from "@/lib/analytics";
 import { deleteApplications } from "@/lib/actions";
-import { JOB_TYPE_LABELS } from "@/lib/constants";
 import { signalNavigation } from "@/lib/navigation";
 
 type Props = {
@@ -80,6 +81,8 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
   const router = useRouter();
   const pathname = usePathname();
   const searchParams = useSearchParams();
+  const { locale, t } = useLocale();
+  const dfLocale = dateFnsLocale(locale);
   const sortBy = searchParams.get("sortBy") ?? "dateApplied";
   const sortDir = searchParams.get("sortDir") ?? "desc";
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -130,8 +133,8 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
 
     const label =
       ids.length === 1
-        ? "Delete 1 application?"
-        : `Delete ${ids.length} applications?`;
+        ? t("applications.bulkDeleteOne")
+        : t("applications.bulkDeleteMany", { count: ids.length });
     if (!confirm(label)) return;
 
     startTransition(async () => {
@@ -140,10 +143,11 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
         toast.error(result.error);
         return;
       }
+      const count = result.count ?? ids.length;
       toast.success(
-        `Deleted ${result.count ?? ids.length} application${
-          (result.count ?? ids.length) === 1 ? "" : "s"
-        }`
+        count === 1
+          ? t("applications.deletedCount", { count })
+          : t("applications.deletedCountPlural", { count })
       );
       setSelected(new Set());
       router.refresh();
@@ -155,7 +159,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
       {selected.size > 0 ? (
         <div className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/50 bg-card px-4 py-3 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
           <p className="text-sm font-medium">
-            {selected.size} selected
+            {selected.size} {t("common.selected")}
           </p>
           <div className="flex items-center gap-2">
             <Button
@@ -165,7 +169,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
               disabled={isPending}
               onClick={() => setSelected(new Set())}
             >
-              Clear
+              {t("common.clear")}
             </Button>
             <Button
               variant="destructive"
@@ -175,7 +179,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
               onClick={handleBulkDelete}
             >
               <Trash2 className="size-4" />
-              {isPending ? "Deleting…" : "Delete selected"}
+              {isPending ? t("common.saving") : t("common.deleteSelected")}
             </Button>
           </div>
         </div>
@@ -195,20 +199,40 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                 />
               </TableHead>
               <TableHead>
-                <SortHeader label="Company" column="company" current={sortBy} dir={sortDir} />
-              </TableHead>
-              <TableHead>
-                <SortHeader label="Job Title" column="jobTitle" current={sortBy} dir={sortDir} />
-              </TableHead>
-              <TableHead>
-                <SortHeader label="Status" column="status" current={sortBy} dir={sortDir} />
-              </TableHead>
-              <TableHead>
-                <SortHeader label="Type" column="jobType" current={sortBy} dir={sortDir} />
+                <SortHeader
+                  label={t("applications.company")}
+                  column="company"
+                  current={sortBy}
+                  dir={sortDir}
+                />
               </TableHead>
               <TableHead>
                 <SortHeader
-                  label="Start"
+                  label={t("applications.jobTitle")}
+                  column="jobTitle"
+                  current={sortBy}
+                  dir={sortDir}
+                />
+              </TableHead>
+              <TableHead>
+                <SortHeader
+                  label={t("applications.status")}
+                  column="status"
+                  current={sortBy}
+                  dir={sortDir}
+                />
+              </TableHead>
+              <TableHead>
+                <SortHeader
+                  label={t("applications.type")}
+                  column="jobType"
+                  current={sortBy}
+                  dir={sortDir}
+                />
+              </TableHead>
+              <TableHead>
+                <SortHeader
+                  label={t("common.start")}
                   column="startYear"
                   current={sortBy}
                   dir={sortDir}
@@ -216,33 +240,38 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
               </TableHead>
               <TableHead>
                 <SortHeader
-                  label="Date Applied"
+                  label={t("applications.dateApplied")}
                   column="dateApplied"
                   current={sortBy}
                   dir={sortDir}
                 />
               </TableHead>
               <TableHead>
-                <SortHeader label="Location" column="location" current={sortBy} dir={sortDir} />
+                <SortHeader
+                  label={t("applications.location")}
+                  column="location"
+                  current={sortBy}
+                  dir={sortDir}
+                />
               </TableHead>
-              <TableHead>Referral</TableHead>
+              <TableHead>{t("applications.referral")}</TableHead>
               <TableHead>
                 <SortHeader
-                  label="Interview"
+                  label={t("status.INTERVIEW")}
                   column="interviewDate"
                   current={sortBy}
                   dir={sortDir}
                 />
               </TableHead>
-              <TableHead>Notes</TableHead>
-              <TableHead>Link</TableHead>
+              <TableHead>{t("applications.notes")}</TableHead>
+              <TableHead>{t("applications.jobLink")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
-                  No applications found.
+                  {t("applications.empty")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -277,13 +306,17 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                       <StatusBadge status={app.status} />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
-                      {JOB_TYPE_LABELS[app.jobType]}
+                      {t(`jobType.${app.jobType}`)}
                     </TableCell>
                     <TableCell className="tabular-nums text-muted-foreground">
                       {app.startYear ?? "—"}
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
-                      {app.dateApplied ? format(app.dateApplied, "MMM d, yyyy") : "—"}
+                      {app.dateApplied
+                        ? format(app.dateApplied, "MMM d, yyyy", {
+                            locale: dfLocale,
+                          })
+                        : "—"}
                     </TableCell>
                     <TableCell className="max-w-[140px] truncate text-muted-foreground">
                       {app.location || "—"}
@@ -291,7 +324,9 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                     <TableCell>{app.referral ? "Yes" : "No"}</TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {app.interviewDate
-                        ? format(app.interviewDate, "MMM d, yyyy")
+                        ? format(app.interviewDate, "MMM d, yyyy", {
+                            locale: dfLocale,
+                          })
                         : "—"}
                     </TableCell>
                     <TableCell className="max-w-[160px] truncate text-muted-foreground">
@@ -322,8 +357,10 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
 
       <div className="flex items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          {total} application{total === 1 ? "" : "s"}
-          {selected.size > 0 ? ` · ${selected.size} selected` : ""}
+          {total} {t("analytics.applications")}
+          {selected.size > 0
+            ? ` · ${selected.size} ${t("common.selected")}`
+            : ""}
         </p>
         <div className="flex items-center gap-2">
           <Button
@@ -334,10 +371,10 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
             onClick={() => goToPage(page - 1)}
           >
             <ChevronLeft className="size-4" />
-            Prev
+            {t("common.previous")}
           </Button>
           <span className="text-sm tabular-nums text-muted-foreground">
-            {page} / {totalPages}
+            {t("common.page")} {page} {t("common.of")} {totalPages}
           </span>
           <Button
             variant="outline"
@@ -346,7 +383,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
             disabled={page >= totalPages}
             onClick={() => goToPage(page + 1)}
           >
-            Next
+            {t("common.next")}
             <ChevronRight className="size-4" />
           </Button>
         </div>

@@ -5,6 +5,7 @@ import { ImagePlus, Link2, Loader2, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useLocale } from "@/components/locale-provider";
 import { cn } from "@/lib/utils";
 import type { ExtractedJob } from "@/lib/validations";
 import { importFromJobImage, importFromJobUrl } from "@/lib/actions";
@@ -31,6 +32,7 @@ export function JobImport({ enabled, onImported }: Props) {
   const [url, setUrl] = useState("");
   const [dragging, setDragging] = useState(false);
   const [isPending, startTransition] = useTransition();
+  const { t } = useLocale();
 
   const handleResult = useCallback(
     (result: { data?: ExtractedJob; error?: string }) => {
@@ -40,16 +42,16 @@ export function JobImport({ enabled, onImported }: Props) {
       }
       if (result.data) {
         onImported(result.data);
-        toast.success("Fields filled from import — review before saving.");
+        toast.success(t("import.success"));
       }
     },
-    [onImported]
+    [onImported, t]
   );
 
   function runUrlImport(rawUrl: string) {
     const trimmed = rawUrl.trim();
     if (!trimmed) {
-      toast.error("Paste a job posting URL first.");
+      toast.error(t("import.description"));
       return;
     }
     startTransition(async () => {
@@ -60,7 +62,7 @@ export function JobImport({ enabled, onImported }: Props) {
 
   function runImageImport(file: File) {
     if (!file.type.startsWith("image/")) {
-      toast.error("Drop an image screenshot (PNG, JPEG, WEBP).");
+      toast.error(t("import.fromImage"));
       return;
     }
     startTransition(async () => {
@@ -69,36 +71,34 @@ export function JobImport({ enabled, onImported }: Props) {
         const result = await importFromJobImage(payload);
         handleResult(result);
       } catch (err) {
-        toast.error(err instanceof Error ? err.message : "Failed to read image");
+        toast.error(err instanceof Error ? err.message : t("import.unavailable"));
       }
     });
   }
 
-  function onPaste(e: React.ClipboardEvent) {
-    if (!enabled || isPending) return;
-
-    const items = Array.from(e.clipboardData.items);
-    const imageItem = items.find((item) => item.type.startsWith("image/"));
-    if (imageItem) {
-      const file = imageItem.getAsFile();
-      if (file) {
-        e.preventDefault();
-        runImageImport(file);
-        return;
-      }
-    }
-
-    const text = e.clipboardData.getData("text").trim();
-    if (/^https?:\/\//i.test(text)) {
-      e.preventDefault();
-      setUrl(text);
-      runUrlImport(text);
-    }
-  }
-
   return (
     <div
-      onPaste={onPaste}
+      onPaste={(e) => {
+        if (!enabled || isPending) return;
+
+        const items = Array.from(e.clipboardData.items);
+        const imageItem = items.find((item) => item.type.startsWith("image/"));
+        if (imageItem) {
+          const file = imageItem.getAsFile();
+          if (file) {
+            e.preventDefault();
+            runImageImport(file);
+            return;
+          }
+        }
+
+        const text = e.clipboardData.getData("text").trim();
+        if (/^https?:\/\//i.test(text)) {
+          e.preventDefault();
+          setUrl(text);
+          runUrlImport(text);
+        }
+      }}
       className={cn(
         "rounded-2xl border border-dashed border-border/80 bg-muted/30 p-4 transition-colors sm:p-5",
         dragging && "border-primary bg-primary/5",
@@ -133,18 +133,16 @@ export function JobImport({ enabled, onImported }: Props) {
           )}
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">Import from link or screenshot</p>
+          <p className="text-sm font-medium">{t("import.title")}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Paste a job URL, drop a screenshot, or paste an image from your clipboard.
-            Gemini will fill company, title, location, and more.
+            {t("import.description")}
           </p>
         </div>
       </div>
 
       {!enabled ? (
         <p className="rounded-xl bg-amber-50 px-3 py-2 text-xs text-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
-          Set <code className="font-mono">GEMINI_API_KEY</code> in your environment
-          (and Vercel) to enable import.
+          {t("import.unavailable")}
         </p>
       ) : (
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -160,7 +158,7 @@ export function JobImport({ enabled, onImported }: Props) {
                 }
               }}
               disabled={isPending}
-              placeholder="https://careers.example.com/job/…"
+              placeholder={t("import.urlPlaceholder")}
               className="h-10 rounded-xl pl-9"
             />
           </div>
@@ -171,7 +169,7 @@ export function JobImport({ enabled, onImported }: Props) {
               disabled={isPending}
               onClick={() => runUrlImport(url)}
             >
-              {isPending ? "Importing…" : "Import URL"}
+              {isPending ? t("import.importing") : t("import.fromUrl")}
             </Button>
             <Button
               type="button"
@@ -181,7 +179,7 @@ export function JobImport({ enabled, onImported }: Props) {
               onClick={() => fileInputRef.current?.click()}
             >
               <ImagePlus className="size-4" />
-              Screenshot
+              {t("import.fromImage")}
             </Button>
             <input
               ref={fileInputRef}

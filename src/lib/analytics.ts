@@ -6,9 +6,12 @@ import {
   eachMonthOfInterval,
   subMonths,
   isValid,
+  type Locale as DateLocale,
 } from "date-fns";
+import { enUS, ko as koDate } from "date-fns/locale";
+import { createTranslator, type Translator } from "@/i18n";
+import type { Locale } from "@/i18n/config";
 import {
-  STATUS_LABELS,
   STATUS_CHART_COLORS,
   type ApplicationMetric,
 } from "./constants";
@@ -102,20 +105,30 @@ export function availableYears(apps: Application[]): number[] {
   return Array.from(years).sort((a, b) => b - a);
 }
 
-export function formatPeriodLabel(period: PeriodFilter): string {
+export function dateFnsLocale(locale: Locale): DateLocale {
+  return locale === "ko" ? koDate : enUS;
+}
+
+export function formatPeriodLabel(
+  period: PeriodFilter,
+  t: Translator = createTranslator("en"),
+  locale: Locale = "en"
+): string {
   const parts: string[] = [];
-  if (period.jobType === "INTERNSHIP") parts.push("Internships");
-  else if (period.jobType === "FULL_TIME") parts.push("Full-time");
-  if (period.startYear) parts.push(`start ${period.startYear}`);
+  if (period.jobType === "INTERNSHIP") parts.push(t("period.internships"));
+  else if (period.jobType === "FULL_TIME") parts.push(t("period.fullTime"));
+  if (period.startYear) parts.push(`${t("period.start")} ${period.startYear}`);
   if (!period.year) {
-    if (!parts.length) return "All time";
+    if (!parts.length) return t("period.allTime");
     return parts.join(" · ");
   }
   if (period.month) {
     const d = new Date(period.year, period.month - 1, 1);
-    parts.push(`applied ${format(d, "MMM yyyy")}`);
+    parts.push(
+      `${t("period.applied")} ${format(d, locale === "ko" ? "yyyy년 MMM" : "MMM yyyy", { locale: dateFnsLocale(locale) })}`
+    );
   } else {
-    parts.push(`applied ${period.year}`);
+    parts.push(`${t("period.applied")} ${period.year}`);
   }
   return parts.join(" · ");
 }
@@ -195,7 +208,10 @@ export function chartDataForPeriod(
   return monthlyCountsForYear(apps, period.year);
 }
 
-export function statusDistribution(apps: Application[]) {
+export function statusDistribution(
+  apps: Application[],
+  t: Translator = createTranslator("en")
+) {
   const counts = new Map<ApplicationStatus, number>();
   for (const app of apps) {
     counts.set(app.status, (counts.get(app.status) ?? 0) + 1);
@@ -203,17 +219,21 @@ export function statusDistribution(apps: Application[]) {
   return Array.from(counts.entries())
     .map(([status, value]) => ({
       status,
-      name: STATUS_LABELS[status],
+      name: t(`status.${status}`),
       value,
       fill: STATUS_CHART_COLORS[status],
     }))
     .sort((a, b) => b.value - a.value);
 }
 
-export function locationCounts(apps: Application[], limit = 8) {
+export function locationCounts(
+  apps: Application[],
+  limit = 8,
+  t: Translator = createTranslator("en")
+) {
   const counts = new Map<string, number>();
   for (const app of apps) {
-    const loc = app.location?.trim() || "Unknown";
+    const loc = app.location?.trim() || t("common.unknown");
     counts.set(loc, (counts.get(loc) ?? 0) + 1);
   }
   return Array.from(counts.entries())
@@ -222,7 +242,10 @@ export function locationCounts(apps: Application[], limit = 8) {
     .slice(0, limit);
 }
 
-export function pipelineFunnel(apps: Application[]) {
+export function pipelineFunnel(
+  apps: Application[],
+  t: Translator = createTranslator("en")
+) {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
 
   const stages = [
@@ -252,7 +275,7 @@ export function pipelineFunnel(apps: Application[]) {
     const count = submitted.filter((a) => (stageRank[a.status] ?? 0) >= rank)
       .length;
     return {
-      stage: STATUS_LABELS[status],
+      stage: t(`status.${status}`),
       status,
       count,
       fill: STATUS_CHART_COLORS[status],
@@ -260,17 +283,20 @@ export function pipelineFunnel(apps: Application[]) {
   });
 }
 
-export function sankeyData(apps: Application[]) {
+export function sankeyData(
+  apps: Application[],
+  t: Translator = createTranslator("en")
+) {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
   const nodes = [
-    { name: "Applied" },
-    { name: "OA" },
-    { name: "Recruiter" },
-    { name: "Interview" },
-    { name: "Final" },
-    { name: "Offer" },
-    { name: "Rejected" },
-    { name: "Ghosted" },
+    { name: t("sankey.applied") },
+    { name: t("sankey.oa") },
+    { name: t("sankey.recruiter") },
+    { name: t("sankey.interview") },
+    { name: t("sankey.final") },
+    { name: t("sankey.offer") },
+    { name: t("sankey.rejected") },
+    { name: t("sankey.ghosted") },
   ];
 
   const countStatus = (s: ApplicationStatus) =>

@@ -16,13 +16,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useLocale } from "@/components/locale-provider";
 import {
   ALL_JOB_TYPES,
   ALL_STATUSES,
-  JOB_TYPE_LABELS,
   mergeMilestones,
   milestonesFromStatus,
-  STATUS_LABELS,
 } from "@/lib/constants";
 import { toDateInputValue } from "@/lib/analytics";
 import type { ExtractedJob } from "@/lib/validations";
@@ -48,6 +47,7 @@ export function ApplicationForm({
 }: Props) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const { t } = useLocale();
   const [status, setStatus] = useState<ApplicationStatus>(
     application?.status ?? ApplicationStatus.WISHLIST
   );
@@ -149,11 +149,13 @@ export function ApplicationForm({
         : await createApplication(payload);
 
       if (result.error) {
-        toast.error("Please check the form fields.");
+        toast.error(t("applications.formError"));
         return;
       }
 
-      toast.success(application ? "Application updated" : "Application created");
+      toast.success(
+        application ? t("applications.updated") : t("applications.created")
+      );
       router.push("/applications");
       router.refresh();
     });
@@ -161,10 +163,10 @@ export function ApplicationForm({
 
   function onDelete() {
     if (!application) return;
-    if (!confirm("Delete this application?")) return;
+    if (!confirm(t("applications.deleteConfirm"))) return;
     startTransition(async () => {
       await deleteApplication(application.id);
-      toast.success("Application deleted");
+      toast.success(t("applications.deleted"));
       router.push("/applications");
       router.refresh();
     });
@@ -175,7 +177,7 @@ export function ApplicationForm({
       <JobImport enabled={geminiConfigured} onImported={applyImport} />
 
       <div className="grid gap-5 sm:grid-cols-2">
-        <Field label="Company" htmlFor="company" required>
+        <Field label={t("applications.company")} htmlFor="company" required>
           <Input
             id="company"
             name="company"
@@ -183,10 +185,10 @@ export function ApplicationForm({
             value={company}
             onChange={(e) => setCompany(e.target.value)}
             className="h-10 rounded-xl"
-            placeholder="Apple"
+            placeholder={t("applications.companyPlaceholder")}
           />
         </Field>
-        <Field label="Job Title" htmlFor="jobTitle" required>
+        <Field label={t("applications.jobTitle")} htmlFor="jobTitle" required>
           <Input
             id="jobTitle"
             name="jobTitle"
@@ -194,26 +196,26 @@ export function ApplicationForm({
             value={jobTitle}
             onChange={(e) => setJobTitle(e.target.value)}
             className="h-10 rounded-xl"
-            placeholder="Software Engineer Intern"
+            placeholder={t("applications.titlePlaceholder")}
           />
         </Field>
-        <Field label="Location" htmlFor="location">
+        <Field label={t("applications.location")} htmlFor="location">
           <Input
             id="location"
             name="location"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             className="h-10 rounded-xl"
-            placeholder="Cupertino, CA"
+            placeholder={t("applications.locationPlaceholder")}
           />
         </Field>
         <OptionalDateField
-          label="Date Applied"
+          label={t("applications.dateApplied")}
           id="dateApplied"
           value={dateApplied}
           onChange={setDateApplied}
         />
-        <Field label="Status" htmlFor="status">
+        <Field label={t("applications.status")} htmlFor="status">
           <Select
             value={status}
             onValueChange={(v) => v && applyStatus(v as ApplicationStatus)}
@@ -224,13 +226,13 @@ export function ApplicationForm({
             <SelectContent>
               {ALL_STATUSES.map((s) => (
                 <SelectItem key={s} value={s}>
-                  {STATUS_LABELS[s]}
+                  {t(`status.${s}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Type" htmlFor="jobType">
+        <Field label={t("applications.type")} htmlFor="jobType">
           <Select
             value={jobType}
             onValueChange={(v) => v && setJobType(v as JobType)}
@@ -239,15 +241,15 @@ export function ApplicationForm({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              {ALL_JOB_TYPES.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {JOB_TYPE_LABELS[t]}
+              {ALL_JOB_TYPES.map((type) => (
+                <SelectItem key={type} value={type}>
+                  {t(`jobType.${type}`)}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
         </Field>
-        <Field label="Start year" htmlFor="startYear">
+        <Field label={t("applications.startYear")} htmlFor="startYear">
           <Input
             id="startYear"
             name="startYear"
@@ -257,20 +259,20 @@ export function ApplicationForm({
             value={startYear}
             onChange={(e) => setStartYear(e.target.value)}
             className="h-10 rounded-xl"
-            placeholder="e.g. 2027"
+            placeholder={t("applications.startYearPlaceholder")}
           />
         </Field>
-        <Field label="Salary" htmlFor="salary">
+        <Field label={t("applications.salary")} htmlFor="salary">
           <Input
             id="salary"
             name="salary"
             value={salary}
             onChange={(e) => setSalary(e.target.value)}
             className="h-10 rounded-xl"
-            placeholder="$50/hr or $120k"
+            placeholder={t("applications.salaryPlaceholder")}
           />
         </Field>
-        <Field label="Job Link" htmlFor="jobLink">
+        <Field label={t("applications.jobLink")} htmlFor="jobLink">
           <Input
             id="jobLink"
             name="jobLink"
@@ -281,28 +283,28 @@ export function ApplicationForm({
             placeholder="https://..."
           />
         </Field>
-        <Field label="Resume Version" htmlFor="resumeVersion">
+        <Field label={t("applications.resumeVersion")} htmlFor="resumeVersion">
           <Input
             id="resumeVersion"
             name="resumeVersion"
             value={resumeVersion}
             onChange={(e) => setResumeVersion(e.target.value)}
             className="h-10 rounded-xl"
-            placeholder="v3-swe"
+            placeholder={t("applications.resumePlaceholder")}
           />
         </Field>
         <OptionalDateField
-          label="Interview Date"
+          label={t("applications.interviewDate")}
           id="interviewDate"
           value={interviewDate}
           onChange={(value) => {
             setInterviewDate(value);
             if (value) setInterviewReached(true);
           }}
-          hint="Setting a date marks Reached interview"
+          hint={t("applications.interviewDateHint")}
         />
         <OptionalDateField
-          label="Deadline"
+          label={t("applications.deadline")}
           id="deadline"
           value={deadline}
           onChange={setDeadline}
@@ -315,24 +317,22 @@ export function ApplicationForm({
             checked={referral}
             onCheckedChange={(v) => setReferral(Boolean(v))}
           />
-          Referral
+          {t("applications.referral")}
         </label>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox
             checked={coverLetter}
             onCheckedChange={(v) => setCoverLetter(Boolean(v))}
           />
-          Cover Letter
+          {t("applications.coverLetter")}
         </label>
       </div>
 
       <div className="space-y-3 rounded-2xl border border-border/60 bg-muted/30 p-4">
         <div>
-          <p className="text-sm font-medium">Milestones</p>
+          <p className="text-sm font-medium">{t("applications.milestones")}</p>
           <p className="text-xs text-muted-foreground">
-            Sticky — stay checked after a rejection so rates stay accurate. Auto-set
-            from status or interview date; use OA / 역량검사 for post-resume tests
-            (not interviews). Check manually for older apps if needed.
+            {t("applications.milestonesHint")}
           </p>
         </div>
         <div className="flex flex-wrap gap-6">
@@ -345,7 +345,7 @@ export function ApplicationForm({
                 Boolean(interviewDate)
               }
             />
-            Reached interview
+            {t("applications.reachedInterview")}
           </label>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
@@ -353,7 +353,7 @@ export function ApplicationForm({
               onCheckedChange={(v) => setOfferReceived(Boolean(v))}
               disabled={milestonesFromStatus(status).offerReceived}
             />
-            Received offer
+            {t("applications.receivedOffer")}
           </label>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
@@ -361,29 +361,29 @@ export function ApplicationForm({
               onCheckedChange={(v) => setResponseReceived(Boolean(v))}
               disabled={milestonesFromStatus(status).responseReceived}
             />
-            Got a response
+            {t("applications.gotResponse")}
           </label>
         </div>
       </div>
 
-      <Field label="Notes" htmlFor="notes">
+      <Field label={t("applications.notes")} htmlFor="notes">
         <Textarea
           id="notes"
           name="notes"
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           className="min-h-28 rounded-xl"
-          placeholder="Follow-ups, contacts, impressions…"
+          placeholder={t("applications.notesPlaceholder")}
         />
       </Field>
 
       <div className="flex flex-wrap items-center gap-3">
         <Button type="submit" disabled={isPending} className="h-10 rounded-xl px-5">
           {isPending
-            ? "Saving…"
+            ? t("common.saving")
             : application
-              ? "Save changes"
-              : "Create application"}
+              ? t("common.save")
+              : t("common.create")}
         </Button>
         <Button
           type="button"
@@ -391,7 +391,7 @@ export function ApplicationForm({
           className="h-10 rounded-xl"
           onClick={() => router.back()}
         >
-          Cancel
+          {t("common.cancel")}
         </Button>
         {application ? (
           <Button
@@ -401,7 +401,7 @@ export function ApplicationForm({
             disabled={isPending}
             onClick={onDelete}
           >
-            Delete
+            {t("common.delete")}
           </Button>
         ) : null}
       </div>
@@ -444,11 +444,13 @@ function OptionalDateField({
   onChange: (value: string) => void;
   hint?: string;
 }) {
+  const { t } = useLocale();
+
   return (
     <div className="space-y-2">
       <div className="flex items-baseline justify-between gap-2">
         <Label htmlFor={id}>{label}</Label>
-        <span className="text-xs text-muted-foreground">Optional</span>
+        <span className="text-xs text-muted-foreground">{t("common.optional")}</span>
       </div>
       <div className="flex gap-2">
         <Input
@@ -466,7 +468,7 @@ function OptionalDateField({
             className="h-10 shrink-0 rounded-xl px-3"
             onClick={() => onChange("")}
           >
-            Clear
+            {t("common.clear")}
           </Button>
         ) : null}
       </div>

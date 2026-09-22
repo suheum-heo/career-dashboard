@@ -396,3 +396,13 @@ export function toDateInputValue(date?: Date | null): string {
   if (!date) return "";
   return format(date, "yyyy-MM-dd");
 }
+
+/** Today's date as yyyy-MM-dd for date inputs / defaults. */
+export function todayDateInputValue(now = new Date()): string {
+  return format(now, "yyyy-MM-dd");
+}
+
+/** Parse optional date string; fall back to today when empty. */
+export function parseDateOrToday(value?: string | null): Date {
+  return parseOptionalDate(value) ?? new Date();
+}

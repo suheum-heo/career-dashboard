@@ -23,7 +23,7 @@ import {
   mergeMilestones,
   milestonesFromStatus,
 } from "@/lib/constants";
-import { toDateInputValue } from "@/lib/analytics";
+import { toDateInputValue, todayDateInputValue } from "@/lib/analytics";
 import type { ExtractedJob } from "@/lib/validations";
 import {
   createApplication,
@@ -66,7 +66,8 @@ export function ApplicationForm({
   const [jobTitle, setJobTitle] = useState(application?.jobTitle ?? "");
   const [location, setLocation] = useState(emptyToValue(application?.location));
   const [dateApplied, setDateApplied] = useState(
-    toDateInputValue(application?.dateApplied)
+    toDateInputValue(application?.dateApplied) ||
+      (application ? "" : todayDateInputValue())
   );
   const [salary, setSalary] = useState(emptyToValue(application?.salary));
   const [jobLink, setJobLink] = useState(emptyToValue(application?.jobLink));
@@ -126,7 +127,7 @@ export function ApplicationForm({
       company,
       jobTitle,
       location: location || null,
-      dateApplied: dateApplied || null,
+      dateApplied: dateApplied || todayDateInputValue(),
       status,
       jobType,
       startYear:

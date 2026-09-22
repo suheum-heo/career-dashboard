@@ -4,13 +4,16 @@ import { revalidatePath } from "next/cache";
 import { ApplicationStatus, Prisma } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { applicationSchema } from "@/lib/validations";
-import { parseOptionalDate } from "@/lib/analytics";
+import { parseDateOrToday, parseOptionalDate } from "@/lib/analytics";
 import {
+  GHOST_AFTER_DAYS,
+  GHOSTABLE_STATUSES,
   isApplicationMetric,
   mergeMilestones,
   METRIC_STATUSES,
   PAGE_SIZE,
 } from "@/lib/constants";
+import { subDays } from "date-fns";
 import {
   extractFromImage,
   extractFromUrl,
@@ -101,7 +104,23 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
   return where;
 }
 
+/** Mark APPLIED/OA apps as Ghosted when status hasn't changed for 60 days. */
+async function autoGhostStaleApplications() {
+  const cutoff = subDays(new Date(), GHOST_AFTER_DAYS);
+  await prisma.application.updateMany({
+    where: {
+      status: { in: GHOSTABLE_STATUSES },
+      statusChangedAt: { lt: cutoff },
+    },
+    data: {
+      status: ApplicationStatus.GHOSTED,
+      statusChangedAt: new Date(),
+    },
+  });
+}
+
 export async function getApplications(params: ApplicationListParams = {}) {
+  await autoGhostStaleApplications();
   const page = Math.max(1, params.page ?? 1);
   const sortBy = params.sortBy ?? "dateApplied";
   const sortDir = params.sortDir ?? "desc";
@@ -145,8 +164,17 @@ export async function getApplication(id: string) {
 }
 
 export async function getAllApplications() {
+  await autoGhostStaleApplications();
   return prisma.application.findMany({
     orderBy: { updatedAt: "desc" },
+  });
+}
+
+export async function getRecentApplications(limit = 8) {
+  await autoGhostStaleApplications();
+  return prisma.application.findMany({
+    orderBy: { updatedAt: "desc" },
+    take: limit,
   });
 }
 
@@ -170,13 +198,6 @@ export async function getStartYears() {
   return rows.map((r) => r.startYear!).filter(Boolean);
 }
 
-export async function getRecentApplications(limit = 8) {
-  return prisma.application.findMany({
-    orderBy: { updatedAt: "desc" },
-    take: limit,
-  });
-}
-
 export async function getCalendarEvents() {
   const apps = await prisma.application.findMany({
     where: {
@@ -197,6 +218,7 @@ export async function createApplication(raw: unknown) {
   }
 
   const data = parsed.data;
+  const now = new Date();
   const milestones = mergeMilestones(data.status, {
     interviewReached: data.interviewReached,
     offerReceived: data.offerReceived,
@@ -209,7 +231,7 @@ export async function createApplication(raw: unknown) {
       company: data.company,
       jobTitle: data.jobTitle,
       location: data.location || null,
-      dateApplied: parseOptionalDate(data.dateApplied),
+      dateApplied: parseDateOrToday(data.dateApplied),
       status: data.status,
       jobType: data.jobType,
       startYear: data.startYear ?? null,
@@ -222,6 +244,7 @@ export async function createApplication(raw: unknown) {
       notes: data.notes || null,
       interviewDate: parseOptionalDate(data.interviewDate),
       deadline: parseOptionalDate(data.deadline),
+      statusChangedAt: now,
       interviewReached: milestones.interviewReached,
       offerReceived: milestones.offerReceived,
       responseReceived: milestones.responseReceived,
@@ -242,6 +265,11 @@ export async function updateApplication(id: string, raw: unknown) {
   }
 
   const data = parsed.data;
+  const existing = await prisma.application.findUnique({ where: { id } });
+  if (!existing) {
+    return { error: { company: ["Application not found"] } };
+  }
+
   const milestones = mergeMilestones(data.status, {
     interviewReached: data.interviewReached,
     offerReceived: data.offerReceived,
@@ -250,13 +278,15 @@ export async function updateApplication(id: string, raw: unknown) {
     recruiterOutreach: data.recruiterOutreach,
   });
 
+  const statusChanged = existing.status !== data.status;
+
   const app = await prisma.application.update({
     where: { id },
     data: {
       company: data.company,
       jobTitle: data.jobTitle,
       location: data.location || null,
-      dateApplied: parseOptionalDate(data.dateApplied),
+      dateApplied: parseDateOrToday(data.dateApplied),
       status: data.status,
       jobType: data.jobType,
       startYear: data.startYear ?? null,
@@ -269,6 +299,7 @@ export async function updateApplication(id: string, raw: unknown) {
       notes: data.notes || null,
       interviewDate: parseOptionalDate(data.interviewDate),
       deadline: parseOptionalDate(data.deadline),
+      ...(statusChanged ? { statusChangedAt: new Date() } : {}),
       interviewReached: milestones.interviewReached,
       offerReceived: milestones.offerReceived,
       responseReceived: milestones.responseReceived,

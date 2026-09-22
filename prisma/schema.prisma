@@ -45,6 +45,8 @@ model Application {
   notes             String?
   interviewDate     DateTime?
   deadline          DateTime?
+  /// Last time status changed (used for 60-day auto-ghost)
+  statusChangedAt   DateTime          @default(now())
   /// Sticky: stays true after rejection/withdrawal if they ever reached interview stage
   interviewReached  Boolean           @default(false)
   /// Sticky: stays true if they ever received an offer
@@ -61,6 +63,7 @@ model Application {
   @@index([interviewDate])
   @@index([jobType])
   @@index([startYear])
+  @@index([statusChangedAt])
   @@index([interviewReached])
   @@index([offerReceived])
   @@index([responseReceived])

@@ -101,7 +101,15 @@ export const JOB_TYPE_LABELS: Record<JobType, string> = {
 
 export const ALL_JOB_TYPES = Object.values(JobType);
 
-export const PAGE_SIZE = 10;
+export const PAGE_SIZE = 20;
+
+/** Waiting statuses that auto-turn Ghosted after this many days without a status change. */
+export const GHOST_AFTER_DAYS = 60;
+
+export const GHOSTABLE_STATUSES: ApplicationStatus[] = [
+  ApplicationStatus.APPLIED,
+  ApplicationStatus.OA,
+];
 
 /** Status buckets used by dashboard/analytics rate cards. */
 export const METRIC_STATUSES = {

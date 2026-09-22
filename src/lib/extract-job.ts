@@ -17,9 +17,15 @@ const EXTRACTION_PROMPT = `Extract job application fields from the posting. Retu
 }
 
 Field rules:
+- jobTitle: concise ROLE title only (what you'd put on a resume / tracker). Examples:
+  - "2027 Commercial & Investment Bank - Markets Summer Analyst Program - Seoul" → "Markets Summer Analyst"
+  - "2026 Software Engineer Intern - Cupertino, CA" → "Software Engineer Intern"
+  - "Summer Analyst Program, Investment Banking" → "Investment Banking Summer Analyst"
+  Strip: leading years, trailing city/country, bank/division path prefixes, and words like "Program" when the role is already clear.
+  Put the year in startYear and the city in location instead. Never return the full marketing headline.
 - location: city, state/region, country, "Remote", hybrid, or office name exactly as shown (e.g. "San Francisco, CA", "Remote - US", "Seoul, Korea"). Look near the title, job meta row, and labels like Location / Offices / Workplace.
 - salary: pay, compensation, base, range, or hourly rate exactly as shown (e.g. "$120k-$150k", "$45/hr", "₩80,000,000"). Look for Salary / Compensation / Pay / Base / Total rewards. Include currency and range when present.
-- jobType: INTERNSHIP for intern/co-op roles, FULL_TIME for new grad or experienced full-time roles.
+- jobType: INTERNSHIP for intern/co-op/summer analyst roles, FULL_TIME for new grad or experienced full-time roles.
 - startYear: the year the role starts (e.g. Summer 2027 intern → 2027). Not the application year.
 - deadline: YYYY-MM-DD only if an application deadline is explicit, else null
 - notes: one short line max
@@ -170,6 +176,83 @@ function prioritizeMetaSnippets(text: string): string {
   return `Job meta hints: ${prioritized}\n\n${text}`;
 }
 
+const ROLE_HINT =
+  /\b(Analyst|Associate|Engineer|Intern|Internship|Developer|Scientist|Designer|Manager|Director|Trader|Banker|Researcher|Consultant|Specialist|Coordinator|Officer|Summer|Co-?op)\b/i;
+
+function isYearPart(part: string) {
+  return /^20\d{2}$/.test(part.trim());
+}
+
+function isLocationPart(part: string) {
+  const p = part.trim();
+  if (!p) return false;
+  if (/^Remote(?:\b|\s)/i.test(p)) return true;
+  if (/^[가-힣]{1,12}(?:시|특별시|광역시|도)?$/.test(p)) return true;
+  // "Seoul", "Cupertino, CA", "New York, NY", "Hong Kong"
+  if (/^[A-Z][A-Za-z]*(?:\s+[A-Z][A-Za-z]*){0,2}(?:,\s*[A-Z]{2})?$/.test(p)) {
+    return !ROLE_HINT.test(p);
+  }
+  return false;
+}
+
+function isOrgPathPart(part: string) {
+  const p = part.trim();
+  if (ROLE_HINT.test(p)) return false;
+  return /(?:Bank|Banking|Markets|Division|Group|Business|Institutional|Corporate|Commercial|Investment)\b/i.test(
+    p
+  );
+}
+
+/** Trim marketing headline noise into a concise role title. */
+export function normalizeJobTitle(title?: string | null): string | null {
+  let t = title?.trim() ?? "";
+  if (!t) return null;
+
+  // Soft-split "Year Role - City" and "Year - Org - Role - City"
+  let parts = t
+    .split(/\s*[-–—|]\s*/u)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  if (parts[0] && isYearPart(parts[0])) {
+    parts = parts.slice(1);
+  } else if (parts[0]) {
+    parts[0] = parts[0].replace(/^(?:20\d{2})\s+/u, "").trim();
+    if (!parts[0]) parts = parts.slice(1);
+  }
+
+  while (parts.length > 1 && isLocationPart(parts[parts.length - 1]!)) {
+    parts.pop();
+  }
+
+  while (parts.length > 1 && isOrgPathPart(parts[0]!)) {
+    parts = parts.slice(1);
+  }
+
+  // If one long leftover part still starts with an org path before a role word, cut the prefix
+  if (parts.length === 1) {
+    const only = parts[0]!;
+    const roleMatch = only.match(ROLE_HINT);
+    if (roleMatch?.index && roleMatch.index > 0) {
+      const before = only.slice(0, roleMatch.index).trim();
+      if (isOrgPathPart(before) || /(?:Bank|Banking|Markets)\b/i.test(before)) {
+        // Prefer from the role word, but keep a short qualifier just before it (e.g. "Markets Summer Analyst")
+        const words = only.split(/\s+/);
+        const roleWordIdx = words.findIndex((w) => ROLE_HINT.test(w));
+        if (roleWordIdx >= 0) {
+          const start = Math.max(0, roleWordIdx - 1);
+          parts = [words.slice(start).join(" ")];
+        }
+      }
+    }
+  }
+
+  t = parts.join(" ").replace(/\s+/g, " ").trim();
+  t = t.replace(/\s+Programs?\s*$/iu, "").trim();
+
+  return t || null;
+}
+
 function normalizeExtracted(data: ExtractedJob): ExtractedJob {
   const clean = (value?: string | null) => {
     const trimmed = value?.trim();
@@ -177,7 +260,7 @@ function normalizeExtracted(data: ExtractedJob): ExtractedJob {
   };
   return {
     company: clean(data.company),
-    jobTitle: clean(data.jobTitle),
+    jobTitle: normalizeJobTitle(data.jobTitle),
     location: clean(data.location),
     salary: clean(data.salary),
     jobLink: clean(data.jobLink),

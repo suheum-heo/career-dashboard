@@ -161,6 +161,7 @@ export function mergeMilestones(
     offerReceived?: boolean;
     responseReceived?: boolean;
     interviewDate?: string | Date | null;
+    recruiterOutreach?: boolean;
   }
 ) {
   const fromStatus = milestonesFromStatus(status);
@@ -175,6 +176,8 @@ export function mergeMilestones(
       hasInterviewDate,
     offerReceived: fromStatus.offerReceived || Boolean(flags.offerReceived),
     responseReceived:
-      fromStatus.responseReceived || Boolean(flags.responseReceived),
+      fromStatus.responseReceived ||
+      Boolean(flags.responseReceived) ||
+      Boolean(flags.recruiterOutreach),
   };
 }

@@ -21,6 +21,7 @@ export const applicationSchema = z.object({
     .nullable(),
   salary: z.string().max(80).optional().nullable(),
   referral: z.boolean(),
+  recruiterOutreach: z.boolean().optional().default(false),
   jobLink: z
     .union([z.string().url("Enter a valid URL"), z.literal(""), z.null()])
     .optional(),

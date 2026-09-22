@@ -202,6 +202,7 @@ export async function createApplication(raw: unknown) {
     offerReceived: data.offerReceived,
     responseReceived: data.responseReceived,
     interviewDate: data.interviewDate,
+    recruiterOutreach: data.recruiterOutreach,
   });
   const app = await prisma.application.create({
     data: {
@@ -214,6 +215,7 @@ export async function createApplication(raw: unknown) {
       startYear: data.startYear ?? null,
       salary: data.salary || null,
       referral: data.referral,
+      recruiterOutreach: data.recruiterOutreach ?? false,
       jobLink: data.jobLink || null,
       resumeVersion: data.resumeVersion || null,
       coverLetter: data.coverLetter,
@@ -245,6 +247,7 @@ export async function updateApplication(id: string, raw: unknown) {
     offerReceived: data.offerReceived,
     responseReceived: data.responseReceived,
     interviewDate: data.interviewDate,
+    recruiterOutreach: data.recruiterOutreach,
   });
 
   const app = await prisma.application.update({
@@ -259,6 +262,7 @@ export async function updateApplication(id: string, raw: unknown) {
       startYear: data.startYear ?? null,
       salary: data.salary || null,
       referral: data.referral,
+      recruiterOutreach: data.recruiterOutreach ?? false,
       jobLink: data.jobLink || null,
       resumeVersion: data.resumeVersion || null,
       coverLetter: data.coverLetter,

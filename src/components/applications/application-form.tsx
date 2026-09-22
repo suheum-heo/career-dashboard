@@ -58,6 +58,9 @@ export function ApplicationForm({
     application?.startYear ? String(application.startYear) : ""
   );
   const [referral, setReferral] = useState(application?.referral ?? false);
+  const [recruiterOutreach, setRecruiterOutreach] = useState(
+    application?.recruiterOutreach ?? false
+  );
   const [coverLetter, setCoverLetter] = useState(application?.coverLetter ?? false);
   const [company, setCompany] = useState(application?.company ?? "");
   const [jobTitle, setJobTitle] = useState(application?.jobTitle ?? "");
@@ -132,6 +135,7 @@ export function ApplicationForm({
           : null,
       salary: salary || null,
       referral,
+      recruiterOutreach,
       jobLink: jobLink || null,
       resumeVersion: resumeVersion || null,
       coverLetter,
@@ -318,6 +322,17 @@ export function ApplicationForm({
             onCheckedChange={(v) => setReferral(Boolean(v))}
           />
           {t("applications.referral")}
+        </label>
+        <label className="flex items-center gap-2 text-sm">
+          <Checkbox
+            checked={recruiterOutreach}
+            onCheckedChange={(v) => {
+              const next = Boolean(v);
+              setRecruiterOutreach(next);
+              if (next) setResponseReceived(true);
+            }}
+          />
+          {t("applications.recruiterOutreach")}
         </label>
         <label className="flex items-center gap-2 text-sm">
           <Checkbox

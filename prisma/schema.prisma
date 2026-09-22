@@ -37,6 +37,8 @@ model Application {
   startYear         Int?
   salary            String?
   referral          Boolean           @default(false)
+  /// Recruiter (or hiring team) reached out first / inbound contact
+  recruiterOutreach Boolean           @default(false)
   jobLink           String?
   resumeVersion     String?
   coverLetter       Boolean           @default(false)

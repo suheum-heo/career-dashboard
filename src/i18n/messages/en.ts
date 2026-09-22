@@ -139,6 +139,7 @@ export const en = {
     notes: "Notes",
     notesPlaceholder: "Follow-ups, contacts, impressions…",
     referral: "Referral",
+    recruiterOutreach: "Recruiter reached out",
     coverLetter: "Cover Letter",
     milestones: "Milestones",
     milestonesHint:

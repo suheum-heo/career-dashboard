@@ -255,6 +255,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                 />
               </TableHead>
               <TableHead>{t("applications.referral")}</TableHead>
+              <TableHead>{t("applications.recruiterOutreach")}</TableHead>
               <TableHead>
                 <SortHeader
                   label={t("status.INTERVIEW")}
@@ -270,7 +271,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
           <TableBody>
             {items.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={12} className="h-32 text-center text-muted-foreground">
+                <TableCell colSpan={13} className="h-32 text-center text-muted-foreground">
                   {t("applications.empty")}
                 </TableCell>
               </TableRow>
@@ -322,6 +323,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                       {app.location || "—"}
                     </TableCell>
                     <TableCell>{app.referral ? "Yes" : "No"}</TableCell>
+                    <TableCell>{app.recruiterOutreach ? "Yes" : "No"}</TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {app.interviewDate
                         ? format(app.interviewDate, "MMM d, yyyy", {

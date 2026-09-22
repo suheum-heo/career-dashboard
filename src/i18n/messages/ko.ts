@@ -141,6 +141,7 @@ export const ko = {
     notes: "메모",
     notesPlaceholder: "팔로업, 연락처, 인상 등…",
     referral: "추천",
+    recruiterOutreach: "리크루터 연락",
     coverLetter: "자기소개서/커버레터",
     milestones: "마일스톤",
     milestonesHint:

@@ -314,6 +314,40 @@ export async function updateApplication(id: string, raw: unknown) {
   return { data: app };
 }
 
+export async function updateApplicationStatus(id: string, status: string) {
+  if (!Object.values(ApplicationStatus).includes(status as ApplicationStatus)) {
+    return { error: "Invalid status" };
+  }
+  const nextStatus = status as ApplicationStatus;
+
+  const existing = await prisma.application.findUnique({ where: { id } });
+  if (!existing) return { error: "Application not found" };
+  if (existing.status === nextStatus) return { data: existing };
+
+  const milestones = mergeMilestones(nextStatus, {
+    interviewReached: existing.interviewReached,
+    offerReceived: existing.offerReceived,
+    responseReceived: existing.responseReceived,
+    interviewDate: existing.interviewDate,
+    recruiterOutreach: existing.recruiterOutreach,
+  });
+
+  const app = await prisma.application.update({
+    where: { id },
+    data: {
+      status: nextStatus,
+      statusChangedAt: new Date(),
+      ...milestones,
+    },
+  });
+
+  revalidatePath("/");
+  revalidatePath("/applications");
+  revalidatePath(`/applications/${id}`);
+  revalidatePath("/analytics");
+  return { data: app };
+}
+
 export async function deleteApplication(id: string) {
   await prisma.application.delete({ where: { id } });
   revalidatePath("/");

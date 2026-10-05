@@ -25,7 +25,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { StatusBadge } from "@/components/status-badge";
+import { StatusSelect } from "@/components/applications/status-select";
 import { useLocale } from "@/components/locale-provider";
 import { dateFnsLocale } from "@/lib/analytics";
 import { deleteApplications } from "@/lib/actions";
@@ -304,7 +304,11 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                     </TableCell>
                     <TableCell className="max-w-[180px] truncate">{app.jobTitle}</TableCell>
                     <TableCell>
-                      <StatusBadge status={app.status} />
+                      <StatusSelect
+                        key={`${app.id}-${app.status}`}
+                        applicationId={app.id}
+                        status={app.status}
+                      />
                     </TableCell>
                     <TableCell className="text-muted-foreground">
                       {t(`jobType.${app.jobType}`)}

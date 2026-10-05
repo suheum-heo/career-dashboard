@@ -155,6 +155,7 @@ export const en = {
     resumePlaceholder: "v3-swe",
     created: "Application created",
     updated: "Application updated",
+    statusUpdated: "Status updated",
     deleted: "Application deleted",
     deleteConfirm: "Delete this application?",
     formError: "Please check the form fields.",

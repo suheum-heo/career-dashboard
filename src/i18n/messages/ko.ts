@@ -157,6 +157,7 @@ export const ko = {
     resumePlaceholder: "v3-swe",
     created: "지원이 등록되었습니다",
     updated: "지원이 수정되었습니다",
+    statusUpdated: "상태가 변경되었습니다",
     deleted: "지원이 삭제되었습니다",
     deleteConfirm: "이 지원을 삭제할까요?",
     formError: "입력값을 확인해 주세요.",

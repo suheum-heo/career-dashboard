@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { formatDistanceToNow } from "date-fns";
 import { Application } from "@prisma/client";
-import { StatusBadge } from "@/components/status-badge";
+import { StatusSelect } from "@/components/applications/status-select";
 import { useLocale } from "@/components/locale-provider";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { dateFnsLocale } from "@/lib/analytics";
@@ -30,12 +30,11 @@ export function RecentActivity({ applications }: { applications: Application[] }
           </p>
         ) : (
           applications.map((app) => (
-            <Link
+            <div
               key={app.id}
-              href={`/applications/${app.id}`}
               className="flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors hover:bg-muted/60"
             >
-              <div className="min-w-0 flex-1">
+              <Link href={`/applications/${app.id}`} className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">
                   {app.company}
                   <span className="font-normal text-muted-foreground">
@@ -49,9 +48,13 @@ export function RecentActivity({ applications }: { applications: Application[] }
                     locale: dfLocale,
                   })}
                 </p>
-              </div>
-              <StatusBadge status={app.status} />
-            </Link>
+              </Link>
+              <StatusSelect
+                key={`${app.id}-${app.status}`}
+                applicationId={app.id}
+                status={app.status}
+              />
+            </div>
           ))
         )}
       </CardContent>

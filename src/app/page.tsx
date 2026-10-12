@@ -18,7 +18,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getAllApplications, getRecentApplications } from "@/lib/actions";
+import { formatSeason } from "@/lib/season";
 import {
+  availableSeasons,
   availableYears,
   availableStartYears,
   applicationsHrefForMetric,
@@ -36,6 +38,7 @@ type SearchParams = Promise<{
   month?: string;
   jobType?: string;
   startYear?: string;
+  season?: string;
 }>;
 
 export default async function DashboardPage({
@@ -54,6 +57,7 @@ export default async function DashboardPage({
 
   const years = availableYears(allApps);
   const startYears = availableStartYears(allApps);
+  const seasons = availableSeasons(allApps);
   const apps = filterByPeriod(allApps, period);
   const stats = computeStats(apps);
   const monthly = chartDataForPeriod(
@@ -72,7 +76,11 @@ export default async function DashboardPage({
         actions={
           <div className="flex flex-wrap items-center gap-2">
             <Suspense fallback={null}>
-              <PeriodFilter years={years} startYears={startYears} />
+              <PeriodFilter
+                years={years}
+                startYears={startYears}
+                seasons={seasons}
+              />
             </Suspense>
             <Link
               href="/applications/new"
@@ -129,9 +137,11 @@ export default async function DashboardPage({
         <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)] lg:col-span-3">
           <CardHeader className="pb-2">
             <CardTitle className="text-base font-semibold">
-              {period.year
-                ? t("dashboard.appsInYear", { year: period.year })
-                : t("dashboard.appsOverTime")}
+              {period.season
+                ? t("dashboard.appsInSeason", { season: formatSeason(period.season) })
+                : period.year
+                  ? t("dashboard.appsInYear", { year: period.year })
+                  : t("dashboard.appsOverTime")}
             </CardTitle>
           </CardHeader>
           <CardContent>

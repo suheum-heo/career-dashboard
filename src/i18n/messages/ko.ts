@@ -35,6 +35,10 @@ export const ko = {
     allLocations: "전체 지역",
     allApplied: "전체 지원 연도",
     allMonths: "전체 월",
+    allSeasons: "전체 시즌",
+    season: "{season} 시즌",
+    recruitingSeasons: "채용 시즌 (8월–7월)",
+    calendarYears: "연도별",
     start: "시작",
     applied: "지원",
     showing: "표시 중",
@@ -103,6 +107,7 @@ export const ko = {
     responseSubtitle: "지원 후 어떤 형태로든 회신",
     appsOverTime: "기간별 지원 수",
     appsInYear: "{year}년 지원 수",
+    appsInSeason: "{season} 시즌 지원 수",
     statusDistribution: "상태 분포",
   },
   analytics: {

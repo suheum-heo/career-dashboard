@@ -20,13 +20,16 @@ import {
   isApplicationMetric,
 } from "@/lib/constants";
 import { signalNavigation } from "@/lib/navigation";
+import { formatSeason, parseSeason } from "@/lib/season";
 
 export function ApplicationFilters({
   locations,
   startYears,
+  seasons,
 }: {
   locations: string[];
   startYears: number[];
+  seasons: number[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -40,6 +43,7 @@ export function ApplicationFilters({
     metricParam && isApplicationMetric(metricParam) ? metricParam : null;
   const appliedYear = searchParams.get("year");
   const appliedMonth = searchParams.get("month");
+  const season = parseSeason(searchParams.get("season"));
 
   useEffect(() => {
     setSearch(searchParams.get("search") ?? "");
@@ -73,7 +77,7 @@ export function ApplicationFilters({
   }
 
   const periodBits: string[] = [];
-  if (appliedYear) {
+  if (appliedYear && !season) {
     periodBits.push(
       appliedMonth
         ? `${t("common.applied")} ${appliedYear}-${appliedMonth.padStart(2, "0")}`
@@ -133,6 +137,31 @@ export function ApplicationFilters({
             {ALL_JOB_TYPES.map((type) => (
               <SelectItem key={type} value={type}>
                 {t(`jobType.${type}`)}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Select
+          value={season ? String(season) : "ALL"}
+          onValueChange={(value) =>
+            updateParams({ season: value ?? "ALL", year: null, month: null })
+          }
+        >
+          <SelectTrigger className="h-10 w-full rounded-xl sm:w-[170px]">
+            <SelectValue>
+              {(value: string | null) => {
+                const s = parseSeason(value);
+                return s
+                  ? t("common.season", { season: formatSeason(s) })
+                  : t("common.allSeasons");
+              }}
+            </SelectValue>
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ALL">{t("common.allSeasons")}</SelectItem>
+            {seasons.map((s) => (
+              <SelectItem key={s} value={String(s)}>
+                {t("common.season", { season: formatSeason(s) })}
               </SelectItem>
             ))}
           </SelectContent>

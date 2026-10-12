@@ -14,6 +14,7 @@ import {
   PAGE_SIZE,
 } from "@/lib/constants";
 import { subDays } from "date-fns";
+import { currentSeason, parseSeason, seasonOf, seasonRange } from "@/lib/season";
 import {
   extractFromImage,
   extractFromUrl,
@@ -29,6 +30,7 @@ export type ApplicationListParams = {
   metric?: string;
   year?: string;
   month?: string;
+  season?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: number;
@@ -36,15 +38,28 @@ export type ApplicationListParams = {
 
 function appliedPeriodFilter(
   year?: string,
-  month?: string
+  month?: string,
+  season?: string
 ): Prisma.ApplicationWhereInput | null {
+  const s = parseSeason(season);
+  if (s) return appliedBetween(seasonRange(s));
+
   const y = year ? Number(year) : NaN;
   if (!Number.isFinite(y)) return null;
   const m = month ? Number(month) : NaN;
   const hasMonth = Number.isFinite(m) && m >= 1 && m <= 12;
   const start = hasMonth ? new Date(y, m - 1, 1) : new Date(y, 0, 1);
   const end = hasMonth ? new Date(y, m, 1) : new Date(y + 1, 0, 1);
+  return appliedBetween({ start, end });
+}
 
+function appliedBetween({
+  start,
+  end,
+}: {
+  start: Date;
+  end: Date;
+}): Prisma.ApplicationWhereInput {
   return {
     OR: [
       { dateApplied: { gte: start, lt: end } },
@@ -94,7 +109,7 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
     if (Number.isFinite(year)) where.startYear = year;
   }
 
-  const period = appliedPeriodFilter(params.year, params.month);
+  const period = appliedPeriodFilter(params.year, params.month, params.season);
   if (period) and.push(period);
 
   if (and.length) {
@@ -186,6 +201,17 @@ export async function getLocations() {
     orderBy: { location: "asc" },
   });
   return rows.map((r) => r.location!).filter(Boolean);
+}
+
+export async function getSeasons() {
+  const rows = await prisma.application.findMany({
+    select: { dateApplied: true, createdAt: true },
+  });
+  const seasons = new Set<number>([currentSeason()]);
+  for (const row of rows) {
+    seasons.add(seasonOf(row.dateApplied ?? row.createdAt));
+  }
+  return Array.from(seasons).sort((a, b) => b - a);
 }
 
 export async function getStartYears() {

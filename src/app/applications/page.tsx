@@ -6,7 +6,12 @@ import { ApplicationFilters } from "@/components/applications/application-filter
 import { ApplicationsTable } from "@/components/applications/applications-table";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getApplications, getLocations, getStartYears } from "@/lib/actions";
+import {
+  getApplications,
+  getLocations,
+  getSeasons,
+  getStartYears,
+} from "@/lib/actions";
 import { getTranslator } from "@/i18n/server";
 
 type SearchParams = Promise<{
@@ -18,6 +23,7 @@ type SearchParams = Promise<{
   metric?: string;
   year?: string;
   month?: string;
+  season?: string;
   sortBy?: string;
   sortDir?: "asc" | "desc";
   page?: string;
@@ -32,7 +38,7 @@ export default async function ApplicationsPage({
   const page = Number(params.page ?? "1") || 1;
   const { t } = await getTranslator();
 
-  const [result, locations, startYears] = await Promise.all([
+  const [result, locations, startYears, seasons] = await Promise.all([
     getApplications({
       search: params.search,
       status: params.status,
@@ -42,12 +48,14 @@ export default async function ApplicationsPage({
       metric: params.metric,
       year: params.year,
       month: params.month,
+      season: params.season,
       sortBy: params.sortBy,
       sortDir: params.sortDir,
       page,
     }),
     getLocations(),
     getStartYears(),
+    getSeasons(),
   ]);
 
   return (
@@ -68,7 +76,11 @@ export default async function ApplicationsPage({
 
       <div className="mb-5">
         <Suspense fallback={<div className="h-10 animate-pulse rounded-xl bg-muted" />}>
-          <ApplicationFilters locations={locations} startYears={startYears} />
+          <ApplicationFilters
+            locations={locations}
+            startYears={startYears}
+            seasons={seasons}
+          />
         </Suspense>
       </div>
 

@@ -33,6 +33,10 @@ export const en = {
     allLocations: "All locations",
     allApplied: "All applied",
     allMonths: "All months",
+    allSeasons: "All seasons",
+    season: "{season} season",
+    recruitingSeasons: "Recruiting seasons (Aug–Jul)",
+    calendarYears: "Calendar years",
     start: "Start",
     applied: "Applied",
     showing: "Showing",
@@ -101,6 +105,7 @@ export const en = {
     responseSubtitle: "Any reply past applied",
     appsOverTime: "Applications over time",
     appsInYear: "Applications in {year}",
+    appsInSeason: "Applications in {season} season",
     statusDistribution: "Status distribution",
   },
   analytics: {

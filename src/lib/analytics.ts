@@ -15,6 +15,13 @@ import {
   STATUS_CHART_COLORS,
   type ApplicationMetric,
 } from "./constants";
+import {
+  currentSeason,
+  formatSeason,
+  parseSeason,
+  seasonOf,
+  seasonRange,
+} from "./season";
 
 export type DashboardStats = {
   total: number;
@@ -29,6 +36,7 @@ export type DashboardStats = {
 export type PeriodFilter = {
   year?: number | null;
   month?: number | null; // 1-12 applied month
+  season?: number | null; // recruiting season start year; exclusive with year/month
   jobType?: string | null;
   startYear?: number | null;
 };
@@ -42,6 +50,7 @@ export function applicationsHrefForMetric(
   params.set("metric", metric);
   if (period?.jobType) params.set("jobType", period.jobType);
   if (period?.startYear) params.set("startYear", String(period.startYear));
+  if (period?.season) params.set("season", String(period.season));
   if (period?.year) params.set("year", String(period.year));
   if (period?.year && period?.month) params.set("month", String(period.month));
   return `/applications?${params.toString()}`;
@@ -57,11 +66,14 @@ export function parsePeriodFromSearchParams(params: {
   month?: string;
   jobType?: string;
   startYear?: string;
+  season?: string;
 }): PeriodFilter {
-  const year = params.year ? Number(params.year) : null;
-  const month = params.month ? Number(params.month) : null;
+  const season = parseSeason(params.season);
+  const year = !season && params.year ? Number(params.year) : null;
+  const month = year && params.month ? Number(params.month) : null;
   const startYear = params.startYear ? Number(params.startYear) : null;
   return {
+    season,
     year: year && Number.isFinite(year) ? year : null,
     month:
       month && Number.isFinite(month) && month >= 1 && month <= 12 ? month : null,
@@ -77,6 +89,9 @@ export function filterByPeriod(
   return apps.filter((app) => {
     if (period.jobType && app.jobType !== period.jobType) return false;
     if (period.startYear && app.startYear !== period.startYear) return false;
+    if (period.season && seasonOf(applicationDate(app)) !== period.season) {
+      return false;
+    }
     if (period.year) {
       const d = applicationDate(app);
       if (d.getFullYear() !== period.year) return false;
@@ -105,6 +120,14 @@ export function availableYears(apps: Application[]): number[] {
   return Array.from(years).sort((a, b) => b - a);
 }
 
+export function availableSeasons(apps: Application[]): number[] {
+  const seasons = new Set<number>([currentSeason()]);
+  for (const app of apps) {
+    seasons.add(seasonOf(applicationDate(app)));
+  }
+  return Array.from(seasons).sort((a, b) => b - a);
+}
+
 export function dateFnsLocale(locale: Locale): DateLocale {
   return locale === "ko" ? koDate : enUS;
 }
@@ -118,6 +141,9 @@ export function formatPeriodLabel(
   if (period.jobType === "INTERNSHIP") parts.push(t("period.internships"));
   else if (period.jobType === "FULL_TIME") parts.push(t("period.fullTime"));
   if (period.startYear) parts.push(`${t("period.start")} ${period.startYear}`);
+  if (period.season) {
+    parts.push(t("common.season", { season: formatSeason(period.season) }));
+  }
   if (!period.year) {
     if (!parts.length) return t("period.allTime");
     return parts.join(" · ");
@@ -185,6 +211,19 @@ export function monthlyCountsForYear(apps: Application[], year: number) {
   });
 }
 
+export function monthlyCountsForSeason(apps: Application[], season: number) {
+  const { start, end } = seasonRange(season);
+  const range = eachMonthOfInterval({ start, end: subMonths(end, 1) });
+
+  return range.map((month) => {
+    const key = format(month, "yyyy-MM");
+    const count = apps.filter(
+      (a) => format(applicationDate(a), "yyyy-MM") === key
+    ).length;
+    return { month: format(month, "MMM"), full: key, count };
+  });
+}
+
 export function yearlyApplicationCounts(apps: Application[]) {
   const years = availableYears(apps).slice().reverse();
   return years.map((year) => ({
@@ -199,6 +238,7 @@ export function chartDataForPeriod(
   period: PeriodFilter,
   fallbackMonths = 6
 ) {
+  if (period.season) return monthlyCountsForSeason(apps, period.season);
   if (!period.year) {
     const years = availableYears(apps);
     if (years.length > 1) return yearlyApplicationCounts(apps);

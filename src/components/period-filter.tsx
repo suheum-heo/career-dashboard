@@ -5,13 +5,17 @@ import { useTransition } from "react";
 import {
   Select,
   SelectContent,
+  SelectGroup,
   SelectItem,
+  SelectLabel,
+  SelectSeparator,
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
 import { useLocale } from "@/components/locale-provider";
 import { ALL_JOB_TYPES } from "@/lib/constants";
 import { signalNavigation } from "@/lib/navigation";
+import { formatSeason, parseSeason } from "@/lib/season";
 import type { JobType } from "@prisma/client";
 
 const MONTH_VALUES = [
@@ -29,12 +33,16 @@ const MONTH_VALUES = [
   "12",
 ] as const;
 
+const SEASON_PREFIX = "season:";
+
 export function PeriodFilter({
   years,
   startYears,
+  seasons,
 }: {
   years: number[];
   startYears: number[];
+  seasons: number[];
 }) {
   const router = useRouter();
   const pathname = usePathname();
@@ -42,8 +50,10 @@ export function PeriodFilter({
   const [isPending, startTransition] = useTransition();
   const { t } = useLocale();
 
-  const year = searchParams.get("year") ?? "ALL";
+  const season = parseSeason(searchParams.get("season"));
+  const year = season ? "ALL" : (searchParams.get("year") ?? "ALL");
   const month = searchParams.get("month") ?? "ALL";
+  const appliedValue = season ? `${SEASON_PREFIX}${season}` : year;
   const jobType = searchParams.get("jobType") ?? "ALL";
   const startYear = searchParams.get("startYear") ?? "ALL";
 
@@ -115,32 +125,54 @@ export function PeriodFilter({
       </Select>
 
       <Select
-        value={year}
+        value={appliedValue}
         onValueChange={(value) => {
-          const nextYear = value ?? "ALL";
-          if (nextYear === "ALL") {
-            updateParams({ year: null, month: null });
+          const next = value ?? "ALL";
+          if (next === "ALL") {
+            updateParams({ season: null, year: null, month: null });
+          } else if (next.startsWith(SEASON_PREFIX)) {
+            updateParams({
+              season: next.slice(SEASON_PREFIX.length),
+              year: null,
+              month: null,
+            });
           } else {
-            updateParams({ year: nextYear });
+            updateParams({ season: null, year: next });
           }
         }}
       >
-        <SelectTrigger className="h-9 min-w-[140px] rounded-xl">
+        <SelectTrigger className="h-9 min-w-[150px] rounded-xl">
           <SelectValue>
-            {(value: string | null) =>
-              !value || value === "ALL"
-                ? t("common.allApplied")
-                : `${t("common.applied")} ${value}`
-            }
+            {(value: string | null) => {
+              if (!value || value === "ALL") return t("common.allApplied");
+              if (value.startsWith(SEASON_PREFIX)) {
+                const s = parseSeason(value.slice(SEASON_PREFIX.length));
+                if (s) return t("common.season", { season: formatSeason(s) });
+              }
+              return `${t("common.applied")} ${value}`;
+            }}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
           <SelectItem value="ALL">{t("common.allApplied")}</SelectItem>
-          {years.map((y) => (
-            <SelectItem key={y} value={String(y)}>
-              {t("common.applied")} {y}
-            </SelectItem>
-          ))}
+          <SelectSeparator />
+          <SelectGroup>
+            <SelectLabel>{t("common.recruitingSeasons")}</SelectLabel>
+            {seasons.map((s) => (
+              <SelectItem key={`season-${s}`} value={`${SEASON_PREFIX}${s}`}>
+                {t("common.season", { season: formatSeason(s) })}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+          <SelectSeparator />
+          <SelectGroup>
+            <SelectLabel>{t("common.calendarYears")}</SelectLabel>
+            {years.map((y) => (
+              <SelectItem key={y} value={String(y)}>
+                {t("common.applied")} {y}
+              </SelectItem>
+            ))}
+          </SelectGroup>
         </SelectContent>
       </Select>
 

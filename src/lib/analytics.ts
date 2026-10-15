@@ -140,6 +140,7 @@ export function formatPeriodLabel(
   const parts: string[] = [];
   if (period.jobType === "INTERNSHIP") parts.push(t("period.internships"));
   else if (period.jobType === "FULL_TIME") parts.push(t("period.fullTime"));
+  else if (period.jobType === "CONTRACT") parts.push(t("period.contract"));
   if (period.startYear) parts.push(`${t("period.start")} ${period.startYear}`);
   if (period.season) {
     parts.push(t("common.season", { season: formatSeason(period.season) }));

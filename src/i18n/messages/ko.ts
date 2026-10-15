@@ -64,6 +64,7 @@ export const ko = {
   jobType: {
     INTERNSHIP: "인턴",
     FULL_TIME: "정규직",
+    CONTRACT: "계약직 / 파트타임",
   },
   metric: {
     interviews: "면접",
@@ -90,6 +91,7 @@ export const ko = {
     allTime: "전체 기간",
     internships: "인턴",
     fullTime: "정규직",
+    contract: "계약직 / 파트타임",
     start: "시작",
     applied: "지원",
   },

@@ -24,6 +24,7 @@ enum ApplicationStatus {
 enum JobType {
   INTERNSHIP
   FULL_TIME
+  CONTRACT
 }
 
 model Application {

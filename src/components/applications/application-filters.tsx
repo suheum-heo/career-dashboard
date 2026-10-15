@@ -123,7 +123,7 @@ export function ApplicationFilters({
           value={searchParams.get("jobType") ?? "ALL"}
           onValueChange={(value) => updateParams({ jobType: value ?? "ALL" })}
         >
-          <SelectTrigger className="h-10 w-full rounded-xl sm:w-[150px]">
+          <SelectTrigger className="h-10 w-full rounded-xl sm:w-[190px]">
             <SelectValue>
               {(value: string | null) =>
                 !value || value === "ALL"

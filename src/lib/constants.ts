@@ -97,6 +97,7 @@ export const ALL_STATUSES = Object.values(ApplicationStatus);
 export const JOB_TYPE_LABELS: Record<JobType, string> = {
   INTERNSHIP: "Internship",
   FULL_TIME: "Full-time",
+  CONTRACT: "Part-time / Contract",
 };
 
 export const ALL_JOB_TYPES = Object.values(JobType);

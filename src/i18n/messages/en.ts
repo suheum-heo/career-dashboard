@@ -62,6 +62,7 @@ export const en = {
   jobType: {
     INTERNSHIP: "Internship",
     FULL_TIME: "Full-time",
+    CONTRACT: "Part-time / Contract",
   },
   metric: {
     interviews: "Interviews",
@@ -88,6 +89,7 @@ export const en = {
     allTime: "All time",
     internships: "Internships",
     fullTime: "Full-time",
+    contract: "Part-time / Contract",
     start: "start",
     applied: "applied",
   },

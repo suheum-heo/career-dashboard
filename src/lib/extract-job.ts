@@ -87,6 +87,20 @@ function isModelMissingError(err: unknown): boolean {
   );
 }
 
+/** 503 / high demand on one model — try the next model instead of failing. */
+function isOverloadedError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message : String(err);
+  const lower = message.toLowerCase();
+  return (
+    message.includes("503") ||
+    message.includes("500") ||
+    lower.includes("unavailable") ||
+    lower.includes("high demand") ||
+    lower.includes("overloaded") ||
+    lower.includes("try again later")
+  );
+}
+
 function friendlyQuotaError(err: unknown): Error {
   const message = err instanceof Error ? err.message : String(err);
   const retryMatch = message.match(/retry in ([\d.]+)s/i);
@@ -99,14 +113,15 @@ function friendlyQuotaError(err: unknown): Error {
 }
 
 /**
- * Try one primary model. Only fall back if the model is missing (404),
- * never on 429 — cascading retries burns free-tier quota faster.
+ * Try models in order. Fall back when a model is missing (404) or overloaded
+ * (503). Stop on 429 — cascading retries burns free-tier quota faster.
  */
 async function generateWithFallback(
   parts: Parameters<ReturnType<typeof getModel>["generateContent"]>[0]
 ): Promise<string> {
   const models = modelCandidates();
   let lastError: unknown;
+  let sawOverload = false;
 
   for (const modelName of models) {
     try {
@@ -117,6 +132,10 @@ async function generateWithFallback(
       if (isQuotaError(err)) {
         throw friendlyQuotaError(err);
       }
+      if (isOverloadedError(err)) {
+        sawOverload = true;
+        continue;
+      }
       if (isModelMissingError(err)) {
         continue;
       }
@@ -126,6 +145,11 @@ async function generateWithFallback(
 
   if (isQuotaError(lastError)) {
     throw friendlyQuotaError(lastError);
+  }
+  if (sawOverload) {
+    throw new Error(
+      "Gemini is busy right now. Wait a minute and try the import again."
+    );
   }
   throw lastError instanceof Error
     ? lastError

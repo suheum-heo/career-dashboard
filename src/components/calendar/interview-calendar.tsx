@@ -18,7 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { StatusBadge } from "@/components/status-badge";
 import { useLocale } from "@/components/locale-provider";
-import { dateFnsLocale } from "@/lib/analytics";
+import { asCalendarDate, dateFnsLocale } from "@/lib/analytics";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 
@@ -56,7 +56,7 @@ export function InterviewCalendar({ applications }: { applications: Application[
         list.push({
           id: `${app.id}-interview`,
           kind: "interview",
-          date: app.interviewDate,
+          date: asCalendarDate(app.interviewDate),
           company: app.company,
           jobTitle: app.jobTitle,
           application: app,
@@ -66,7 +66,7 @@ export function InterviewCalendar({ applications }: { applications: Application[
         list.push({
           id: `${app.id}-deadline`,
           kind: "deadline",
-          date: app.deadline,
+          date: asCalendarDate(app.deadline),
           company: app.company,
           jobTitle: app.jobTitle,
           application: app,

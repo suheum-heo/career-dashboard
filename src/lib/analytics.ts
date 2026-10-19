@@ -427,15 +427,40 @@ export function sankeyData(
   return { nodes, links };
 }
 
+/**
+ * Calendar date as a local Date with the UTC year/month/day.
+ * Stored values are UTC midnight, which is still the previous evening
+ * in timezones behind UTC, so local formatting shows the day before.
+ */
+export function asCalendarDate(date: Date | string): Date {
+  const d = date instanceof Date ? date : new Date(date);
+  return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate());
+}
+
+export function formatCalendarDate(
+  date: Date | string,
+  pattern: string,
+  options?: { locale?: DateLocale }
+): string {
+  return format(asCalendarDate(date), pattern, options);
+}
+
 export function parseOptionalDate(value?: string | null): Date | null {
   if (!value) return null;
+  const dateOnly = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value.trim());
+  if (dateOnly) {
+    const d = new Date(
+      Date.UTC(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3]))
+    );
+    return isValid(d) ? d : null;
+  }
   const d = parseISO(value);
   return isValid(d) ? d : null;
 }
 
-export function toDateInputValue(date?: Date | null): string {
+export function toDateInputValue(date?: Date | string | null): string {
   if (!date) return "";
-  return format(date, "yyyy-MM-dd");
+  return formatCalendarDate(date, "yyyy-MM-dd");
 }
 
 /** Today's date as yyyy-MM-dd for date inputs / defaults. */

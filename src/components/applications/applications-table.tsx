@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { format } from "date-fns";
 import {
   ArrowDown,
   ArrowUp,
@@ -27,7 +26,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { StatusSelect } from "@/components/applications/status-select";
 import { useLocale } from "@/components/locale-provider";
-import { dateFnsLocale } from "@/lib/analytics";
+import { dateFnsLocale, formatCalendarDate } from "@/lib/analytics";
 import { deleteApplications } from "@/lib/actions";
 import { signalNavigation } from "@/lib/navigation";
 
@@ -318,7 +317,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                     </TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {app.dateApplied
-                        ? format(app.dateApplied, "MMM d, yyyy", {
+                        ? formatCalendarDate(app.dateApplied, "MMM d, yyyy", {
                             locale: dfLocale,
                           })
                         : "—"}
@@ -330,7 +329,7 @@ export function ApplicationsTable({ items, page, totalPages, total }: Props) {
                     <TableCell>{app.recruiterOutreach ? "Yes" : "No"}</TableCell>
                     <TableCell className="whitespace-nowrap text-muted-foreground">
                       {app.interviewDate
-                        ? format(app.interviewDate, "MMM d, yyyy", {
+                        ? formatCalendarDate(app.interviewDate, "MMM d, yyyy", {
                             locale: dfLocale,
                           })
                         : "—"}

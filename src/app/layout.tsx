@@ -31,12 +31,12 @@ export const metadata: Metadata = {
   ],
   icons: {
     icon: [
-      { url: "/favicon.ico?v=3", sizes: "any" },
-      { url: "/favicon.svg?v=3", type: "image/svg+xml" },
-      { url: "/icon.png?v=3", type: "image/png", sizes: "32x32" },
+      { url: "/favicon.ico?v=4", sizes: "any" },
+      { url: "/favicon.svg?v=4", type: "image/svg+xml" },
+      { url: "/icon.png?v=4", type: "image/png", sizes: "32x32" },
     ],
-    apple: [{ url: "/apple-icon?v=3", type: "image/png", sizes: "180x180" }],
-    shortcut: "/favicon.ico?v=3",
+    apple: [{ url: "/apple-icon?v=4", type: "image/png", sizes: "180x180" }],
+    shortcut: "/favicon.ico?v=4",
   },
 };
 

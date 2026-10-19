@@ -15,6 +15,7 @@ import { Button, buttonVariants } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { Logo } from "@/components/logo";
 import { useLocale } from "@/components/locale-provider";
 import { useState } from "react";
 
@@ -62,9 +63,7 @@ function SidebarBrand() {
   const { t } = useLocale();
   return (
     <Link href="/" className="flex items-center gap-2.5 px-1">
-      <div className="flex size-8 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
-        <Briefcase className="size-4" />
-      </div>
+      <Logo className="size-8 shrink-0" />
       <div className="leading-tight">
         <p className="text-sm font-semibold tracking-tight">{t("brand.name")}</p>
         <p className="text-[11px] text-muted-foreground">{t("brand.tagline")}</p>

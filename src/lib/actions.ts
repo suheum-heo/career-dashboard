@@ -154,11 +154,18 @@ export async function getApplications(params: ApplicationListParams = {}) {
     "updatedAt",
   ]);
   const orderField = allowedSort.has(sortBy) ? sortBy : "dateApplied";
+  const orderBy: Prisma.ApplicationOrderByWithRelationInput[] = [
+    { [orderField]: sortDir },
+  ];
+  // Same calendar day is one timestamp, so the row added last comes first.
+  if (orderField !== "createdAt") {
+    orderBy.push({ createdAt: sortDir });
+  }
 
   const [items, total] = await Promise.all([
     prisma.application.findMany({
       where,
-      orderBy: { [orderField]: sortDir },
+      orderBy,
       skip: (page - 1) * PAGE_SIZE,
       take: PAGE_SIZE,
     }),

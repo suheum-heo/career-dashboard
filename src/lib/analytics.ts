@@ -195,12 +195,20 @@ export function monthlyApplicationCounts(apps: Application[], months = 6) {
   });
 }
 
+/** Cap open ranges at this month so future months don't plot as zero. */
+function chartEndMonth(latest: Date, now = new Date()): Date {
+  const current = startOfMonth(now);
+  return latest.getTime() > current.getTime() ? current : startOfMonth(latest);
+}
+
 export function monthlyCountsForYear(apps: Application[], year: number) {
   const start = new Date(year, 0, 1);
-  const end = new Date(year, 11, 1);
+  const end = chartEndMonth(new Date(year, 11, 1));
+  if (end.getTime() < start.getTime()) return [];
+
   const range = eachMonthOfInterval({
     start: startOfMonth(start),
-    end: startOfMonth(end),
+    end,
   });
 
   return range.map((month) => {
@@ -214,7 +222,10 @@ export function monthlyCountsForYear(apps: Application[], year: number) {
 
 export function monthlyCountsForSeason(apps: Application[], season: number) {
   const { start, end } = seasonRange(season);
-  const range = eachMonthOfInterval({ start, end: subMonths(end, 1) });
+  const last = chartEndMonth(subMonths(end, 1));
+  if (last.getTime() < start.getTime()) return [];
+
+  const range = eachMonthOfInterval({ start, end: last });
 
   return range.map((month) => {
     const key = format(month, "yyyy-MM");

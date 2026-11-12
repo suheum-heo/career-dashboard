@@ -30,6 +30,8 @@ export const applicationSchema = z.object({
   notes: z.string().max(5000).optional().nullable(),
   interviewDate: z.string().optional().nullable(),
   deadline: z.string().optional().nullable(),
+  oaReached: z.boolean().optional().default(false),
+  recruiterReached: z.boolean().optional().default(false),
   interviewReached: z.boolean().optional().default(false),
   offerReceived: z.boolean().optional().default(false),
   responseReceived: z.boolean().optional().default(false),

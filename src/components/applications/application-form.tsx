@@ -82,11 +82,17 @@ export function ApplicationForm({
   const initialMilestones = mergeMilestones(
     application?.status ?? ApplicationStatus.WISHLIST,
     {
+      oaReached: application?.oaReached,
+      recruiterReached: application?.recruiterReached,
       interviewReached: application?.interviewReached,
       offerReceived: application?.offerReceived,
       responseReceived: application?.responseReceived,
       interviewDate: application?.interviewDate,
     }
+  );
+  const [oaReached, setOaReached] = useState(initialMilestones.oaReached);
+  const [recruiterReached, setRecruiterReached] = useState(
+    initialMilestones.recruiterReached
   );
   const [interviewReached, setInterviewReached] = useState(
     initialMilestones.interviewReached
@@ -101,6 +107,8 @@ export function ApplicationForm({
   function applyStatus(next: ApplicationStatus) {
     setStatus(next);
     const implied = milestonesFromStatus(next);
+    if (implied.oaReached) setOaReached(true);
+    if (implied.recruiterReached) setRecruiterReached(true);
     if (implied.interviewReached) setInterviewReached(true);
     if (implied.offerReceived) setOfferReceived(true);
     if (implied.responseReceived) setResponseReceived(true);
@@ -143,6 +151,8 @@ export function ApplicationForm({
       notes: notes || null,
       interviewDate: interviewDate || null,
       deadline: deadline || null,
+      oaReached,
+      recruiterReached,
       interviewReached,
       offerReceived,
       responseReceived,
@@ -352,6 +362,22 @@ export function ApplicationForm({
           </p>
         </div>
         <div className="flex flex-wrap gap-6">
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={oaReached}
+              onCheckedChange={(v) => setOaReached(Boolean(v))}
+              disabled={milestonesFromStatus(status).oaReached}
+            />
+            {t("applications.reachedOa")}
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Checkbox
+              checked={recruiterReached}
+              onCheckedChange={(v) => setRecruiterReached(Boolean(v))}
+              disabled={milestonesFromStatus(status).recruiterReached}
+            />
+            {t("applications.reachedRecruiter")}
+          </label>
           <label className="flex items-center gap-2 text-sm">
             <Checkbox
               checked={interviewReached}

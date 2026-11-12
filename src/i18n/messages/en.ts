@@ -121,6 +121,14 @@ export const en = {
     byLocation: "By location",
     funnel: "Pipeline funnel",
     sankey: "Pipeline flow",
+    rejectionBreakdown: "Where rejections happened",
+    rejectionBreakdownEmpty: "No rejections in this period.",
+    rejectionStage: {
+      resume: "Resume / applied",
+      oa: "After OA",
+      recruiter: "After recruiter screen",
+      interview: "After interview",
+    },
   },
   applications: {
     title: "Applications",
@@ -151,6 +159,8 @@ export const en = {
     milestones: "Milestones",
     milestonesHint:
       "Sticky — stay checked after a rejection so rates stay accurate. Auto-set from status or interview date; use OA / 역량검사 for post-resume tests (not interviews). Check manually for older apps if needed.",
+    reachedOa: "Reached OA / 역량검사",
+    reachedRecruiter: "Reached recruiter screen",
     reachedInterview: "Reached interview",
     receivedOffer: "Received offer",
     gotResponse: "Got a response",

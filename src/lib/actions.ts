@@ -84,7 +84,9 @@ function buildWhere(params: ApplicationListParams): Prisma.ApplicationWhereInput
 
   if (params.metric && isApplicationMetric(params.metric)) {
     if (params.metric === "interviews") {
-      where.interviewReached = true;
+      and.push({
+        OR: [{ interviewReached: true }, { recruiterReached: true }],
+      });
     } else if (params.metric === "offers") {
       where.offerReceived = true;
     } else if (params.metric === "responses") {
@@ -253,6 +255,8 @@ export async function createApplication(raw: unknown) {
   const data = parsed.data;
   const now = new Date();
   const milestones = mergeMilestones(data.status, {
+    oaReached: data.oaReached,
+    recruiterReached: data.recruiterReached,
     interviewReached: data.interviewReached,
     offerReceived: data.offerReceived,
     responseReceived: data.responseReceived,
@@ -278,6 +282,8 @@ export async function createApplication(raw: unknown) {
       interviewDate: parseOptionalDate(data.interviewDate),
       deadline: parseOptionalDate(data.deadline),
       statusChangedAt: now,
+      oaReached: milestones.oaReached,
+      recruiterReached: milestones.recruiterReached,
       interviewReached: milestones.interviewReached,
       offerReceived: milestones.offerReceived,
       responseReceived: milestones.responseReceived,
@@ -304,6 +310,8 @@ export async function updateApplication(id: string, raw: unknown) {
   }
 
   const milestones = mergeMilestones(data.status, {
+    oaReached: data.oaReached,
+    recruiterReached: data.recruiterReached,
     interviewReached: data.interviewReached,
     offerReceived: data.offerReceived,
     responseReceived: data.responseReceived,
@@ -333,6 +341,8 @@ export async function updateApplication(id: string, raw: unknown) {
       interviewDate: parseOptionalDate(data.interviewDate),
       deadline: parseOptionalDate(data.deadline),
       ...(statusChanged ? { statusChangedAt: new Date() } : {}),
+      oaReached: milestones.oaReached,
+      recruiterReached: milestones.recruiterReached,
       interviewReached: milestones.interviewReached,
       offerReceived: milestones.offerReceived,
       responseReceived: milestones.responseReceived,
@@ -358,6 +368,8 @@ export async function updateApplicationStatus(id: string, status: string) {
   if (existing.status === nextStatus) return { data: existing };
 
   const milestones = mergeMilestones(nextStatus, {
+    oaReached: existing.oaReached,
+    recruiterReached: existing.recruiterReached,
     interviewReached: existing.interviewReached,
     offerReceived: existing.offerReceived,
     responseReceived: existing.responseReceived,

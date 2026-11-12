@@ -163,7 +163,9 @@ export function formatPeriodLabel(
 export function computeStats(apps: Application[]): DashboardStats {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
   const total = submitted.length;
-  const interviews = apps.filter((a) => a.interviewReached).length;
+  const interviews = apps.filter(
+    (a) => a.interviewReached || a.recruiterReached
+  ).length;
   const offers = apps.filter((a) => a.offerReceived).length;
   const rejections = apps.filter(
     (a) => a.status === ApplicationStatus.REJECTED
@@ -179,6 +181,54 @@ export function computeStats(apps: Application[]): DashboardStats {
     interviewRate: total ? Math.round((interviews / total) * 100) : 0,
     offerRate: total ? Math.round((offers / total) * 100) : 0,
   };
+}
+
+export type RejectionStage = "resume" | "oa" | "recruiter" | "interview";
+
+const REJECTION_STAGE_COLORS: Record<RejectionStage, string> = {
+  resume: "#f43f5e",
+  oa: "#8b5cf6",
+  recruiter: "#06b6d4",
+  interview: "#f59e0b",
+};
+
+const REJECTION_STAGES: RejectionStage[] = [
+  "resume",
+  "oa",
+  "recruiter",
+  "interview",
+];
+
+/** Furthest sticky stage reached before a rejection. */
+export function rejectionStage(app: Application): RejectionStage | null {
+  if (app.status !== ApplicationStatus.REJECTED) return null;
+  if (app.interviewReached) return "interview";
+  if (app.recruiterReached) return "recruiter";
+  if (app.oaReached) return "oa";
+  return "resume";
+}
+
+export function rejectionBreakdown(
+  apps: Application[],
+  t: Translator = createTranslator("en")
+) {
+  const counts: Record<RejectionStage, number> = {
+    resume: 0,
+    oa: 0,
+    recruiter: 0,
+    interview: 0,
+  };
+  for (const app of apps) {
+    const stage = rejectionStage(app);
+    if (stage) counts[stage] += 1;
+  }
+  const total = REJECTION_STAGES.reduce((sum, stage) => sum + counts[stage], 0);
+  return REJECTION_STAGES.map((stage) => ({
+    stage: t(`analytics.rejectionStage.${stage}`),
+    count: counts[stage],
+    fill: REJECTION_STAGE_COLORS[stage],
+    pct: total ? Math.round((counts[stage] / total) * 100) : 0,
+  }));
 }
 
 export function monthlyApplicationCounts(apps: Application[], months = 6) {

@@ -123,6 +123,14 @@ export const ko = {
     byLocation: "지역별",
     funnel: "파이프라인 퍼널",
     sankey: "파이프라인 흐름",
+    rejectionBreakdown: "불합격이 난 단계",
+    rejectionBreakdownEmpty: "이 기간에 불합격이 없습니다.",
+    rejectionStage: {
+      resume: "이력서 / 지원",
+      oa: "OA 이후",
+      recruiter: "리크루터 이후",
+      interview: "면접 이후",
+    },
   },
   applications: {
     title: "지원 목록",
@@ -153,6 +161,8 @@ export const ko = {
     milestones: "마일스톤",
     milestonesHint:
       "한 번 체크되면 불합격 후에도 유지됩니다. 상태·면접일로 자동 설정되며, 이력서 통과 후 시험은 OA / 역량검사로 두세요. 과거 지원은 직접 체크할 수 있습니다.",
+    reachedOa: "OA / 역량검사 도달",
+    reachedRecruiter: "리크루터 면접 도달",
     reachedInterview: "면접 도달",
     receivedOffer: "오퍼 받음",
     gotResponse: "응답 받음",

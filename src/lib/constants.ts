@@ -149,12 +149,33 @@ export function isApplicationMetric(value: string): value is ApplicationMetric {
   return value in METRIC_STATUSES;
 }
 
+const OA_REACHED_STATUSES: readonly ApplicationStatus[] = [
+  ApplicationStatus.OA,
+  ApplicationStatus.RECRUITER_SCREEN,
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.FINAL_ROUND,
+  ApplicationStatus.OFFER,
+];
+
+const RECRUITER_REACHED_STATUSES: readonly ApplicationStatus[] = [
+  ApplicationStatus.RECRUITER_SCREEN,
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.FINAL_ROUND,
+  ApplicationStatus.OFFER,
+];
+
+const INTERVIEW_REACHED_STATUSES: readonly ApplicationStatus[] = [
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.FINAL_ROUND,
+  ApplicationStatus.OFFER,
+];
+
 /** Milestones implied by the current status (used to auto-set sticky flags). */
 export function milestonesFromStatus(status: ApplicationStatus) {
   return {
-    interviewReached: (
-      METRIC_STATUSES.interviews as readonly ApplicationStatus[]
-    ).includes(status),
+    oaReached: OA_REACHED_STATUSES.includes(status),
+    recruiterReached: RECRUITER_REACHED_STATUSES.includes(status),
+    interviewReached: INTERVIEW_REACHED_STATUSES.includes(status),
     offerReceived: status === ApplicationStatus.OFFER,
     responseReceived: (
       METRIC_STATUSES.responses as readonly ApplicationStatus[]
@@ -166,6 +187,8 @@ export function milestonesFromStatus(status: ApplicationStatus) {
 export function mergeMilestones(
   status: ApplicationStatus,
   flags: {
+    oaReached?: boolean;
+    recruiterReached?: boolean;
     interviewReached?: boolean;
     offerReceived?: boolean;
     responseReceived?: boolean;
@@ -179,6 +202,9 @@ export function mergeMilestones(
       !(typeof flags.interviewDate === "string" && !flags.interviewDate.trim())
   );
   return {
+    oaReached: fromStatus.oaReached || Boolean(flags.oaReached),
+    recruiterReached:
+      fromStatus.recruiterReached || Boolean(flags.recruiterReached),
     interviewReached:
       fromStatus.interviewReached ||
       Boolean(flags.interviewReached) ||

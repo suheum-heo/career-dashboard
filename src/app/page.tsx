@@ -13,6 +13,7 @@ import { StatCard } from "@/components/stat-card";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { StatusPieChart } from "@/components/charts/status-pie";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { RejectionBreakdownCard } from "@/components/dashboard/rejection-breakdown";
 import { PeriodFilter } from "@/components/period-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { buttonVariants } from "@/components/ui/button";
@@ -29,6 +30,7 @@ import {
   filterByPeriod,
   formatPeriodLabel,
   parsePeriodFromSearchParams,
+  rejectionBreakdown,
   statusDistribution,
 } from "@/lib/analytics";
 import { getTranslator } from "@/i18n/server";
@@ -66,6 +68,7 @@ export default async function DashboardPage({
     6
   );
   const statusData = statusDistribution(apps, t);
+  const rejections = rejectionBreakdown(apps, t);
   const periodLabel = formatPeriodLabel(period, t, locale);
 
   return (
@@ -158,6 +161,16 @@ export default async function DashboardPage({
             <StatusPieChart data={statusData} />
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-6">
+        <RejectionBreakdownCard
+          title={t("analytics.rejectionBreakdown")}
+          emptyLabel={t("analytics.rejectionBreakdownEmpty")}
+          viewAllLabel={t("common.viewApplications")}
+          viewAllHref={applicationsHrefForMetric("rejections", period)}
+          rows={rejections}
+        />
       </div>
 
       <RecentActivity applications={recent} />

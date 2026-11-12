@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Suspense } from "react";
 import {
   Briefcase,
@@ -12,6 +11,7 @@ import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { FunnelChart } from "@/components/charts/funnel-chart";
 import { PipelineSankey } from "@/components/charts/pipeline-sankey";
 import { LocationChart } from "@/components/charts/location-chart";
+import { RejectionBreakdownCard } from "@/components/dashboard/rejection-breakdown";
 import { PeriodFilter } from "@/components/period-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getAllApplications } from "@/lib/actions";
@@ -64,7 +64,6 @@ export default async function AnalyticsPage({
   const funnel = pipelineFunnel(apps, t);
   const sankey = sankeyData(apps, t);
   const rejections = rejectionBreakdown(apps, t);
-  const rejectionTotal = rejections.reduce((sum, row) => sum + row.count, 0);
   const periodLabel = formatPeriodLabel(period, t, locale);
 
   return (
@@ -153,48 +152,13 @@ export default async function AnalyticsPage({
             <FunnelChart data={funnel} />
           </CardContent>
         </Card>
-        <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-base font-semibold">
-              {t("analytics.rejectionBreakdown")}
-            </CardTitle>
-            {rejectionTotal ? (
-              <Link
-                href={applicationsHrefForMetric("rejections", period)}
-                className="text-xs font-medium text-muted-foreground hover:text-foreground"
-              >
-                {t("common.viewApplications")}
-              </Link>
-            ) : null}
-          </CardHeader>
-          <CardContent>
-            {rejectionTotal === 0 ? (
-              <p className="py-16 text-center text-sm text-muted-foreground">
-                {t("analytics.rejectionBreakdownEmpty")}
-              </p>
-            ) : (
-              <>
-                <FunnelChart data={rejections} />
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
-                  {rejections.map((row) => (
-                    <div
-                      key={row.stage}
-                      className="flex items-center justify-between rounded-xl bg-muted/40 px-3 py-2 text-sm"
-                    >
-                      <span className="text-muted-foreground">{row.stage}</span>
-                      <span className="tabular-nums font-medium">
-                        {row.count}
-                        <span className="ml-1 text-xs font-normal text-muted-foreground">
-                          ({row.pct}%)
-                        </span>
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <RejectionBreakdownCard
+          title={t("analytics.rejectionBreakdown")}
+          emptyLabel={t("analytics.rejectionBreakdownEmpty")}
+          viewAllLabel={t("common.viewApplications")}
+          viewAllHref={applicationsHrefForMetric("rejections", period)}
+          rows={rejections}
+        />
       </div>
 
       <div className="mb-6">

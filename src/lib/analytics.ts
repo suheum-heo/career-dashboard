@@ -495,73 +495,75 @@ export function sankeyData(
   const total = submitted.length;
   const interviewPrefix = t("outcome.interviews");
 
-  const terminals: {
-    key: OutcomeBucket;
-    count: number;
-    name: string;
-    fill: string;
-  }[] = [
-    {
-      key: "interviewOffer",
-      count: counts.interviewOffer,
-      name: labeled(
-        counts.interviewOffer,
-        `${interviewPrefix} · ${t("outcome.offer")}`
-      ),
-      fill: "#6ee7b7",
-    },
-    {
-      key: "interviewNoOffer",
-      count: counts.interviewNoOffer,
-      name: labeled(
-        counts.interviewNoOffer,
-        `${interviewPrefix} · ${t("outcome.noOffer")}`
-      ),
-      fill: "#94a3b8",
-    },
-    {
-      key: "interviewWithdrawn",
-      count: counts.interviewWithdrawn,
-      name: labeled(
-        counts.interviewWithdrawn,
-        `${interviewPrefix} · ${t("outcome.withdrawnByMe")}`
-      ),
-      fill: "#d6d3d1",
-    },
-    {
-      key: "interviewActive",
-      count: counts.interviewActive,
-      name: labeled(
-        counts.interviewActive,
-        `${interviewPrefix} · ${t("outcome.interviewActive")}`
-      ),
-      fill: "#fcd34d",
-    },
-    {
-      key: "rejected",
-      count: counts.rejected,
-      name: labeled(counts.rejected, t("outcome.rejected")),
-      fill: "#a3a35a",
-    },
-    {
-      key: "noAnswer",
-      count: counts.noAnswer,
-      name: labeled(counts.noAnswer, t("outcome.noAnswer")),
-      fill: "#67e8f9",
-    },
-    {
-      key: "inProgress",
-      count: counts.inProgress,
-      name: labeled(counts.inProgress, t("outcome.inProgress")),
-      fill: "#93c5fd",
-    },
-    {
-      key: "recent",
-      count: counts.recent,
-      name: labeled(counts.recent, t("outcome.recent")),
-      fill: "#fdba74",
-    },
-  ].filter((row) => row.count > 0);
+  const terminals = (
+    [
+      {
+        key: "interviewOffer",
+        count: counts.interviewOffer,
+        name: labeled(
+          counts.interviewOffer,
+          `${interviewPrefix} · ${t("outcome.offer")}`
+        ),
+        fill: "#6ee7b7",
+      },
+      {
+        key: "interviewNoOffer",
+        count: counts.interviewNoOffer,
+        name: labeled(
+          counts.interviewNoOffer,
+          `${interviewPrefix} · ${t("outcome.noOffer")}`
+        ),
+        fill: "#94a3b8",
+      },
+      {
+        key: "interviewWithdrawn",
+        count: counts.interviewWithdrawn,
+        name: labeled(
+          counts.interviewWithdrawn,
+          `${interviewPrefix} · ${t("outcome.withdrawnByMe")}`
+        ),
+        fill: "#d6d3d1",
+      },
+      {
+        key: "interviewActive",
+        count: counts.interviewActive,
+        name: labeled(
+          counts.interviewActive,
+          `${interviewPrefix} · ${t("outcome.interviewActive")}`
+        ),
+        fill: "#fcd34d",
+      },
+      {
+        key: "rejected",
+        count: counts.rejected,
+        name: labeled(counts.rejected, t("outcome.rejected")),
+        fill: "#a3a35a",
+      },
+      {
+        key: "noAnswer",
+        count: counts.noAnswer,
+        name: labeled(counts.noAnswer, t("outcome.noAnswer")),
+        fill: "#67e8f9",
+      },
+      {
+        key: "inProgress",
+        count: counts.inProgress,
+        name: labeled(counts.inProgress, t("outcome.inProgress")),
+        fill: "#93c5fd",
+      },
+      {
+        key: "recent",
+        count: counts.recent,
+        name: labeled(counts.recent, t("outcome.recent")),
+        fill: "#fdba74",
+      },
+    ] as const satisfies ReadonlyArray<{
+      key: OutcomeBucket;
+      count: number;
+      name: string;
+      fill: string;
+    }>
+  ).filter((row) => row.count > 0);
 
   const nodes: { name: string; fill?: string }[] = [
     { name: labeled(total, t("outcome.applications")), fill: "#f9a8d4" },

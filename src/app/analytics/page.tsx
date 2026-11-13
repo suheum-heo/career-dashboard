@@ -9,8 +9,8 @@ import { TopBar } from "@/components/layout/sidebar";
 import { StatCard } from "@/components/stat-card";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { FunnelChart } from "@/components/charts/funnel-chart";
-import { PipelineSankey } from "@/components/charts/pipeline-sankey";
 import { LocationChart } from "@/components/charts/location-chart";
+import { OutcomeFlowCard } from "@/components/dashboard/outcome-flow";
 import { RejectionBreakdownCard } from "@/components/dashboard/rejection-breakdown";
 import { PeriodFilter } from "@/components/period-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -162,16 +162,12 @@ export default async function AnalyticsPage({
       </div>
 
       <div className="mb-6">
-        <Card className="rounded-2xl border-border/50 shadow-[0_1px_2px_rgba(0,0,0,0.04),0_8px_24px_rgba(0,0,0,0.04)]">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-base font-semibold">
-              {t("analytics.sankey")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <PipelineSankey data={sankey} />
-          </CardContent>
-        </Card>
+        <OutcomeFlowCard
+          title={t("outcome.title")}
+          total={sankey.total}
+          summary={sankey.summary}
+          sankey={sankey}
+        />
       </div>
     </div>
   );

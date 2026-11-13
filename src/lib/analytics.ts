@@ -5,6 +5,7 @@ import {
   startOfMonth,
   eachMonthOfInterval,
   subMonths,
+  differenceInCalendarDays,
   isValid,
   type Locale as DateLocale,
 } from "date-fns";
@@ -385,107 +386,213 @@ export function pipelineFunnel(
   });
 }
 
+/** Waiting this many days with no response counts as "no answer". */
+export const NO_ANSWER_AFTER_DAYS = 14;
+
+export type OutcomeBucket =
+  | "interviewOffer"
+  | "interviewNoOffer"
+  | "interviewWithdrawn"
+  | "interviewActive"
+  | "rejected"
+  | "noAnswer"
+  | "inProgress"
+  | "recent";
+
+const INTERVIEW_STATUSES: ApplicationStatus[] = [
+  ApplicationStatus.RECRUITER_SCREEN,
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.FINAL_ROUND,
+  ApplicationStatus.OFFER,
+];
+
+const IN_PROGRESS_STATUSES: ApplicationStatus[] = [
+  ApplicationStatus.OA,
+  ApplicationStatus.RECRUITER_SCREEN,
+  ApplicationStatus.INTERVIEW,
+  ApplicationStatus.FINAL_ROUND,
+];
+
+function reachedInterview(app: Application): boolean {
+  return (
+    app.interviewReached ||
+    app.recruiterReached ||
+    INTERVIEW_STATUSES.includes(app.status)
+  );
+}
+
+/** Mutually exclusive outcome for one submitted application. */
+export function classifyOutcome(
+  app: Application,
+  now = new Date()
+): OutcomeBucket | null {
+  if (app.status === ApplicationStatus.WISHLIST) return null;
+
+  if (reachedInterview(app)) {
+    if (app.offerReceived || app.status === ApplicationStatus.OFFER) {
+      return "interviewOffer";
+    }
+    if (app.status === ApplicationStatus.WITHDRAWN) return "interviewWithdrawn";
+    if (app.status === ApplicationStatus.REJECTED) return "interviewNoOffer";
+    if (app.status === ApplicationStatus.GHOSTED) return "interviewNoOffer";
+    return "interviewActive";
+  }
+
+  if (
+    app.status === ApplicationStatus.REJECTED ||
+    app.status === ApplicationStatus.WITHDRAWN
+  ) {
+    return "rejected";
+  }
+  if (app.status === ApplicationStatus.GHOSTED) return "noAnswer";
+
+  if (
+    IN_PROGRESS_STATUSES.includes(app.status) ||
+    app.responseReceived ||
+    app.oaReached
+  ) {
+    return "inProgress";
+  }
+
+  const days = differenceInCalendarDays(now, applicationDate(app));
+  if (days >= NO_ANSWER_AFTER_DAYS) return "noAnswer";
+  return "recent";
+}
+
+function labeled(count: number, label: string) {
+  return `${count} ${label}`;
+}
+
+/**
+ * Outcome flow: Applications → interviews / rejected / no answer /
+ * in progress / recent, with interview sub-outcomes.
+ */
 export function sankeyData(
   apps: Application[],
   t: Translator = createTranslator("en")
 ) {
   const submitted = apps.filter((a) => a.status !== ApplicationStatus.WISHLIST);
-  const nodes = [
-    { name: t("sankey.applied") },
-    { name: t("sankey.oa") },
-    { name: t("sankey.recruiter") },
-    { name: t("sankey.interview") },
-    { name: t("sankey.final") },
-    { name: t("sankey.offer") },
-    { name: t("sankey.rejected") },
-    { name: t("sankey.ghosted") },
+  const counts: Record<OutcomeBucket, number> = {
+    interviewOffer: 0,
+    interviewNoOffer: 0,
+    interviewWithdrawn: 0,
+    interviewActive: 0,
+    rejected: 0,
+    noAnswer: 0,
+    inProgress: 0,
+    recent: 0,
+  };
+  for (const app of submitted) {
+    const bucket = classifyOutcome(app);
+    if (bucket) counts[bucket] += 1;
+  }
+
+  const interviews =
+    counts.interviewOffer +
+    counts.interviewNoOffer +
+    counts.interviewWithdrawn +
+    counts.interviewActive;
+  const total = submitted.length;
+
+  const nodes: { name: string; fill?: string }[] = [
+    { name: labeled(total, t("outcome.applications")), fill: "#f9a8d4" },
+    { name: labeled(interviews, t("outcome.interviews")), fill: "#94a3b8" },
+    { name: labeled(counts.rejected, t("outcome.rejected")), fill: "#a3a35a" },
+    {
+      name: labeled(counts.noAnswer, t("outcome.noAnswer")),
+      fill: "#67e8f9",
+    },
+    {
+      name: labeled(counts.inProgress, t("outcome.inProgress")),
+      fill: "#93c5fd",
+    },
+    { name: labeled(counts.recent, t("outcome.recent")), fill: "#fdba74" },
+    {
+      name: labeled(counts.interviewOffer, t("outcome.offer")),
+      fill: "#6ee7b7",
+    },
+    {
+      name: labeled(counts.interviewNoOffer, t("outcome.noOffer")),
+      fill: "#cbd5e1",
+    },
+    {
+      name: labeled(counts.interviewWithdrawn, t("outcome.withdrawnByMe")),
+      fill: "#d6d3d1",
+    },
+    {
+      name: labeled(counts.interviewActive, t("outcome.interviewActive")),
+      fill: "#fcd34d",
+    },
   ];
 
-  const countStatus = (s: ApplicationStatus) =>
-    submitted.filter((a) => a.status === s).length;
-
-  const applied = submitted.length;
-  const oa = countStatus(ApplicationStatus.OA);
-  const recruiter = countStatus(ApplicationStatus.RECRUITER_SCREEN);
-  const interview = countStatus(ApplicationStatus.INTERVIEW);
-  const finalRound = countStatus(ApplicationStatus.FINAL_ROUND);
-  const offer = countStatus(ApplicationStatus.OFFER);
-  const rejected = countStatus(ApplicationStatus.REJECTED);
-  const ghosted = countStatus(ApplicationStatus.GHOSTED);
-  const withdrawn = countStatus(ApplicationStatus.WITHDRAWN);
-
-  const atOrPast = (statuses: ApplicationStatus[]) =>
-    submitted.filter((a) => statuses.includes(a.status)).length;
-
-  const pastApplied =
-    applied -
-    countStatus(ApplicationStatus.APPLIED) -
-    withdrawn;
-
   const links = [
-    {
-      source: 0,
-      target: 1,
-      value: Math.max(
-        oa +
-          atOrPast([
-            ApplicationStatus.RECRUITER_SCREEN,
-            ApplicationStatus.INTERVIEW,
-            ApplicationStatus.FINAL_ROUND,
-            ApplicationStatus.OFFER,
-          ]),
-        1
-      ),
-    },
-    {
-      source: 0,
-      target: 6,
-      value: Math.max(rejected, 1),
-    },
-    {
-      source: 0,
-      target: 7,
-      value: Math.max(ghosted + withdrawn, 1),
-    },
-    {
-      source: 1,
-      target: 2,
-      value: Math.max(
-        recruiter +
-          atOrPast([
-            ApplicationStatus.INTERVIEW,
-            ApplicationStatus.FINAL_ROUND,
-            ApplicationStatus.OFFER,
-          ]),
-        1
-      ),
-    },
-    {
-      source: 2,
-      target: 3,
-      value: Math.max(
-        interview +
-          atOrPast([
-            ApplicationStatus.FINAL_ROUND,
-            ApplicationStatus.OFFER,
-          ]),
-        1
-      ),
-    },
-    {
-      source: 3,
-      target: 4,
-      value: Math.max(finalRound + offer, 1),
-    },
-    {
-      source: 4,
-      target: 5,
-      value: Math.max(offer, 1),
-    },
-  ].filter((l) => l.value > 0);
+    { source: 0, target: 1, value: interviews },
+    { source: 0, target: 2, value: counts.rejected },
+    { source: 0, target: 3, value: counts.noAnswer },
+    { source: 0, target: 4, value: counts.inProgress },
+    { source: 0, target: 5, value: counts.recent },
+    { source: 1, target: 6, value: counts.interviewOffer },
+    { source: 1, target: 7, value: counts.interviewNoOffer },
+    { source: 1, target: 8, value: counts.interviewWithdrawn },
+    { source: 1, target: 9, value: counts.interviewActive },
+  ].filter((link) => link.value > 0);
 
-  void pastApplied;
-  return { nodes, links };
+  const used = new Set<number>([0]);
+  for (const link of links) {
+    used.add(link.source);
+    used.add(link.target);
+  }
+
+  const indexMap = new Map<number, number>();
+  const compactNodes: { name: string; fill?: string }[] = [];
+  nodes.forEach((node, i) => {
+    if (used.has(i)) {
+      indexMap.set(i, compactNodes.length);
+      compactNodes.push(node);
+    }
+  });
+
+  return {
+    nodes: compactNodes,
+    links: links.map((link) => ({
+      source: indexMap.get(link.source)!,
+      target: indexMap.get(link.target)!,
+      value: link.value,
+    })),
+    summary: [
+      {
+        key: "interviews",
+        label: t("outcome.interviews"),
+        count: interviews,
+        fill: "#94a3b8",
+      },
+      {
+        key: "rejected",
+        label: t("outcome.rejected"),
+        count: counts.rejected,
+        fill: "#a3a35a",
+      },
+      {
+        key: "noAnswer",
+        label: t("outcome.noAnswer"),
+        count: counts.noAnswer,
+        fill: "#67e8f9",
+      },
+      {
+        key: "inProgress",
+        label: t("outcome.inProgress"),
+        count: counts.inProgress,
+        fill: "#93c5fd",
+      },
+      {
+        key: "recent",
+        label: t("outcome.recent"),
+        count: counts.recent,
+        fill: "#fdba74",
+      },
+    ].filter((row) => row.count > 0),
+    total,
+  };
 }
 
 /**

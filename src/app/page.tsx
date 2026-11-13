@@ -13,6 +13,7 @@ import { StatCard } from "@/components/stat-card";
 import { MonthlyChart } from "@/components/charts/monthly-chart";
 import { StatusPieChart } from "@/components/charts/status-pie";
 import { RecentActivity } from "@/components/dashboard/recent-activity";
+import { OutcomeFlowCard } from "@/components/dashboard/outcome-flow";
 import { RejectionBreakdownCard } from "@/components/dashboard/rejection-breakdown";
 import { PeriodFilter } from "@/components/period-filter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -31,6 +32,7 @@ import {
   formatPeriodLabel,
   parsePeriodFromSearchParams,
   rejectionBreakdown,
+  sankeyData,
   statusDistribution,
 } from "@/lib/analytics";
 import { getTranslator } from "@/i18n/server";
@@ -69,6 +71,7 @@ export default async function DashboardPage({
   );
   const statusData = statusDistribution(apps, t);
   const rejections = rejectionBreakdown(apps, t);
+  const outcomes = sankeyData(apps, t);
   const periodLabel = formatPeriodLabel(period, t, locale);
 
   return (
@@ -161,6 +164,15 @@ export default async function DashboardPage({
             <StatusPieChart data={statusData} />
           </CardContent>
         </Card>
+      </div>
+
+      <div className="mb-6">
+        <OutcomeFlowCard
+          title={t("outcome.title")}
+          total={outcomes.total}
+          summary={outcomes.summary}
+          sankey={outcomes}
+        />
       </div>
 
       <div className="mb-6">

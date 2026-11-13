@@ -464,8 +464,8 @@ function labeled(count: number, label: string) {
 }
 
 /**
- * Outcome flow: Applications → interviews / rejected / no answer /
- * in progress / recent, with interview sub-outcomes.
+ * Flat outcome flow so every bucket sits on the right.
+ * (A mid "Interviews" node was pushed left because it had children.)
  */
 export function sankeyData(
   apps: Application[],
@@ -493,72 +493,90 @@ export function sankeyData(
     counts.interviewWithdrawn +
     counts.interviewActive;
   const total = submitted.length;
+  const interviewPrefix = t("outcome.interviews");
 
-  const nodes: { name: string; fill?: string }[] = [
-    { name: labeled(total, t("outcome.applications")), fill: "#f9a8d4" },
-    { name: labeled(interviews, t("outcome.interviews")), fill: "#94a3b8" },
-    { name: labeled(counts.rejected, t("outcome.rejected")), fill: "#a3a35a" },
+  const terminals: {
+    key: OutcomeBucket;
+    count: number;
+    name: string;
+    fill: string;
+  }[] = [
     {
+      key: "interviewOffer",
+      count: counts.interviewOffer,
+      name: labeled(
+        counts.interviewOffer,
+        `${interviewPrefix} · ${t("outcome.offer")}`
+      ),
+      fill: "#6ee7b7",
+    },
+    {
+      key: "interviewNoOffer",
+      count: counts.interviewNoOffer,
+      name: labeled(
+        counts.interviewNoOffer,
+        `${interviewPrefix} · ${t("outcome.noOffer")}`
+      ),
+      fill: "#94a3b8",
+    },
+    {
+      key: "interviewWithdrawn",
+      count: counts.interviewWithdrawn,
+      name: labeled(
+        counts.interviewWithdrawn,
+        `${interviewPrefix} · ${t("outcome.withdrawnByMe")}`
+      ),
+      fill: "#d6d3d1",
+    },
+    {
+      key: "interviewActive",
+      count: counts.interviewActive,
+      name: labeled(
+        counts.interviewActive,
+        `${interviewPrefix} · ${t("outcome.interviewActive")}`
+      ),
+      fill: "#fcd34d",
+    },
+    {
+      key: "rejected",
+      count: counts.rejected,
+      name: labeled(counts.rejected, t("outcome.rejected")),
+      fill: "#a3a35a",
+    },
+    {
+      key: "noAnswer",
+      count: counts.noAnswer,
       name: labeled(counts.noAnswer, t("outcome.noAnswer")),
       fill: "#67e8f9",
     },
     {
+      key: "inProgress",
+      count: counts.inProgress,
       name: labeled(counts.inProgress, t("outcome.inProgress")),
       fill: "#93c5fd",
     },
-    { name: labeled(counts.recent, t("outcome.recent")), fill: "#fdba74" },
     {
-      name: labeled(counts.interviewOffer, t("outcome.offer")),
-      fill: "#6ee7b7",
+      key: "recent",
+      count: counts.recent,
+      name: labeled(counts.recent, t("outcome.recent")),
+      fill: "#fdba74",
     },
-    {
-      name: labeled(counts.interviewNoOffer, t("outcome.noOffer")),
-      fill: "#cbd5e1",
-    },
-    {
-      name: labeled(counts.interviewWithdrawn, t("outcome.withdrawnByMe")),
-      fill: "#d6d3d1",
-    },
-    {
-      name: labeled(counts.interviewActive, t("outcome.interviewActive")),
-      fill: "#fcd34d",
-    },
+  ].filter((row) => row.count > 0);
+
+  const nodes: { name: string; fill?: string }[] = [
+    { name: labeled(total, t("outcome.applications")), fill: "#f9a8d4" },
+    ...terminals.map((row) => ({ name: row.name, fill: row.fill })),
   ];
 
-  const links = [
-    { source: 0, target: 1, value: interviews },
-    { source: 0, target: 2, value: counts.rejected },
-    { source: 0, target: 3, value: counts.noAnswer },
-    { source: 0, target: 4, value: counts.inProgress },
-    { source: 0, target: 5, value: counts.recent },
-    { source: 1, target: 6, value: counts.interviewOffer },
-    { source: 1, target: 7, value: counts.interviewNoOffer },
-    { source: 1, target: 8, value: counts.interviewWithdrawn },
-    { source: 1, target: 9, value: counts.interviewActive },
-  ].filter((link) => link.value > 0);
-
-  const used = new Set<number>([0]);
-  for (const link of links) {
-    used.add(link.source);
-    used.add(link.target);
-  }
-
-  const indexMap = new Map<number, number>();
-  const compactNodes: { name: string; fill?: string }[] = [];
-  nodes.forEach((node, i) => {
-    if (used.has(i)) {
-      indexMap.set(i, compactNodes.length);
-      compactNodes.push(node);
-    }
-  });
+  const links = terminals.map((row, index) => ({
+    source: 0,
+    target: index + 1,
+    value: row.count,
+  }));
 
   return {
-    nodes: compactNodes,
-    links: links.map((link) => ({
-      source: indexMap.get(link.source)!,
-      target: indexMap.get(link.target)!,
-      value: link.value,
-    })),
+    nodes,
+    links,
     summary: [
       {
         key: "interviews",

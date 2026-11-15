@@ -33,7 +33,7 @@ model Application {
   jobTitle          String
   location          String?
   dateApplied       DateTime?
-  status            ApplicationStatus @default(WISHLIST)
+  status            ApplicationStatus @default(APPLIED)
   jobType           JobType           @default(INTERNSHIP)
   startYear         Int?
   salary            String?

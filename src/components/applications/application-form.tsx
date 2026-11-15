@@ -49,7 +49,7 @@ export function ApplicationForm({
   const [isPending, startTransition] = useTransition();
   const { t } = useLocale();
   const [status, setStatus] = useState<ApplicationStatus>(
-    application?.status ?? ApplicationStatus.WISHLIST
+    application?.status ?? ApplicationStatus.APPLIED
   );
   const [jobType, setJobType] = useState<JobType>(
     application?.jobType ?? JobType.INTERNSHIP
@@ -80,7 +80,7 @@ export function ApplicationForm({
   const [deadline, setDeadline] = useState(toDateInputValue(application?.deadline));
   const [notes, setNotes] = useState(emptyToValue(application?.notes));
   const initialMilestones = mergeMilestones(
-    application?.status ?? ApplicationStatus.WISHLIST,
+    application?.status ?? ApplicationStatus.APPLIED,
     {
       oaReached: application?.oaReached,
       recruiterReached: application?.recruiterReached,

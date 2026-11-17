@@ -15,21 +15,33 @@ export function LocationChart({
 }: {
   data: { location: string; count: number }[];
 }) {
+  const rows = [...data].reverse();
+  const height = Math.max(280, rows.length * 36);
+
   return (
-    <div className="h-[300px] w-full">
+    <div className="w-full" style={{ height }}>
       <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={data} margin={{ top: 8, right: 8, left: -12, bottom: 48 }}>
-          <CartesianGrid strokeDasharray="3 3" vertical={false} opacity={0.4} />
+        <BarChart
+          data={rows}
+          layout="vertical"
+          margin={{ top: 4, right: 16, left: 8, bottom: 4 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" horizontal={false} opacity={0.4} />
           <XAxis
-            dataKey="location"
+            type="number"
+            allowDecimals={false}
             axisLine={false}
             tickLine={false}
-            interval={0}
-            angle={-28}
-            textAnchor="end"
             tick={{ fontSize: 11 }}
           />
-          <YAxis allowDecimals={false} axisLine={false} tickLine={false} />
+          <YAxis
+            type="category"
+            dataKey="location"
+            width={128}
+            axisLine={false}
+            tickLine={false}
+            tick={{ fontSize: 12 }}
+          />
           <Tooltip
             contentStyle={{
               borderRadius: 12,
@@ -37,7 +49,7 @@ export function LocationChart({
               background: "hsl(var(--card))",
             }}
           />
-          <Bar dataKey="count" name="Applications" fill="#007AFF" radius={[8, 8, 0, 0]} />
+          <Bar dataKey="count" name="Applications" fill="#007AFF" radius={[0, 8, 8, 0]} />
         </BarChart>
       </ResponsiveContainer>
     </div>

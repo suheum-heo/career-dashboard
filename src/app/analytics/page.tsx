@@ -60,7 +60,7 @@ export default async function AnalyticsPage({
     period,
     8
   );
-  const locations = locationCounts(apps, 8, t);
+  const locations = locationCounts(apps, 12, t);
   const funnel = pipelineFunnel(apps, t);
   const sankey = sankeyData(apps, t);
   const rejections = rejectionBreakdown(apps, t);

@@ -16,6 +16,7 @@ import {
   STATUS_CHART_COLORS,
   type ApplicationMetric,
 } from "./constants";
+import { countriesInLocation } from "./country";
 import {
   currentSeason,
   formatSeason,
@@ -331,14 +332,28 @@ export function statusDistribution(
 
 export function locationCounts(
   apps: Application[],
-  limit = 8,
+  limit = 12,
   t: Translator = createTranslator("en")
 ) {
   const counts = new Map<string, number>();
+  const add = (label: string) => counts.set(label, (counts.get(label) ?? 0) + 1);
+
   for (const app of apps) {
-    const loc = app.location?.trim() || t("common.unknown");
-    counts.set(loc, (counts.get(loc) ?? 0) + 1);
+    const raw = app.location?.trim();
+    if (!raw) {
+      add(t("common.unknown"));
+      continue;
+    }
+    const countries = countriesInLocation(raw);
+    if (countries.length === 0) {
+      add(t("common.unknown"));
+      continue;
+    }
+    for (const code of countries) {
+      add(t(`country.${code}`));
+    }
   }
+
   return Array.from(counts.entries())
     .map(([location, count]) => ({ location, count }))
     .sort((a, b) => b.count - a.count)

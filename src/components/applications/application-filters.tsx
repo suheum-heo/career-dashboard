@@ -21,6 +21,7 @@ import {
 } from "@/lib/constants";
 import { signalNavigation } from "@/lib/navigation";
 import { formatSeason, parseSeason } from "@/lib/season";
+import { isLocationBucket } from "@/lib/country";
 
 export function ApplicationFilters({
   locations,
@@ -41,6 +42,9 @@ export function ApplicationFilters({
   const metricParam = searchParams.get("metric");
   const activeMetric =
     metricParam && isApplicationMetric(metricParam) ? metricParam : null;
+  const countryParam = searchParams.get("country");
+  const activeCountry =
+    countryParam && isLocationBucket(countryParam) ? countryParam : null;
   const appliedYear = searchParams.get("year");
   const appliedMonth = searchParams.get("month");
   const season = parseSeason(searchParams.get("season"));
@@ -102,6 +106,26 @@ export function ApplicationFilters({
             size="sm"
             className="ml-auto h-7 rounded-lg px-2"
             onClick={clearMetric}
+          >
+            <X className="size-3.5" />
+            {t("common.clear")}
+          </Button>
+        </div>
+      ) : null}
+      {activeCountry ? (
+        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-border/60 bg-muted/40 px-3 py-2 text-sm">
+          <span className="text-muted-foreground">{t("common.showing")}</span>
+          <span className="font-medium">
+            {activeCountry === "unknown"
+              ? t("common.unknown")
+              : t(`country.${activeCountry}`)}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="ml-auto h-7 rounded-lg px-2"
+            onClick={() => updateParams({ country: null })}
           >
             <X className="size-3.5" />
             {t("common.clear")}
@@ -223,7 +247,9 @@ export function ApplicationFilters({
         </Select>
         <Select
           value={searchParams.get("location") ?? "ALL"}
-          onValueChange={(value) => updateParams({ location: value ?? "ALL" })}
+          onValueChange={(value) =>
+            updateParams({ location: value ?? "ALL", country: null })
+          }
         >
           <SelectTrigger className="h-10 w-full rounded-xl sm:w-[200px]">
             <SelectValue>

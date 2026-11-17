@@ -20,11 +20,13 @@ import {
   extractFromUrl,
   isGeminiConfigured,
 } from "@/lib/extract-job";
+import { isLocationBucket, locationMatchesBucket } from "@/lib/country";
 
 export type ApplicationListParams = {
   search?: string;
   status?: string;
   location?: string;
+  country?: string;
   jobType?: string;
   startYear?: string;
   metric?: string;
@@ -162,6 +164,24 @@ export async function getApplications(params: ApplicationListParams = {}) {
   // Same calendar day is one timestamp, so the row added last comes first.
   if (orderField !== "createdAt") {
     orderBy.push({ createdAt: sortDir });
+  }
+
+  const country =
+    params.country && isLocationBucket(params.country) ? params.country : null;
+
+  if (country) {
+    const matched = (
+      await prisma.application.findMany({ where, orderBy })
+    ).filter((app) => locationMatchesBucket(app.location, country));
+    const total = matched.length;
+    const start = (page - 1) * PAGE_SIZE;
+    return {
+      items: matched.slice(start, start + PAGE_SIZE),
+      total,
+      page,
+      pageSize: PAGE_SIZE,
+      totalPages: Math.max(1, Math.ceil(total / PAGE_SIZE)),
+    };
   }
 
   const [items, total] = await Promise.all([

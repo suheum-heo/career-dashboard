@@ -16,7 +16,7 @@ import {
   STATUS_CHART_COLORS,
   type ApplicationMetric,
 } from "./constants";
-import { countriesInLocation } from "./country";
+import { countriesInLocation, type LocationBucket } from "./country";
 import {
   currentSeason,
   formatSeason,
@@ -50,6 +50,21 @@ export function applicationsHrefForMetric(
 ): string {
   const params = new URLSearchParams();
   params.set("metric", metric);
+  if (period?.jobType) params.set("jobType", period.jobType);
+  if (period?.startYear) params.set("startYear", String(period.startYear));
+  if (period?.season) params.set("season", String(period.season));
+  if (period?.year) params.set("year", String(period.year));
+  if (period?.year && period?.month) params.set("month", String(period.month));
+  return `/applications?${params.toString()}`;
+}
+
+/** Build /applications URL for a country bar, preserving period filters. */
+export function applicationsHrefForCountry(
+  bucket: LocationBucket,
+  period?: PeriodFilter
+): string {
+  const params = new URLSearchParams();
+  params.set("country", bucket);
   if (period?.jobType) params.set("jobType", period.jobType);
   if (period?.startYear) params.set("startYear", String(period.startYear));
   if (period?.season) params.set("season", String(period.season));
@@ -335,27 +350,25 @@ export function locationCounts(
   limit = 12,
   t: Translator = createTranslator("en")
 ) {
-  const counts = new Map<string, number>();
-  const add = (label: string) => counts.set(label, (counts.get(label) ?? 0) + 1);
+  const counts = new Map<LocationBucket, number>();
+  const add = (code: LocationBucket) =>
+    counts.set(code, (counts.get(code) ?? 0) + 1);
 
   for (const app of apps) {
-    const raw = app.location?.trim();
-    if (!raw) {
-      add(t("common.unknown"));
-      continue;
-    }
-    const countries = countriesInLocation(raw);
+    const countries = countriesInLocation(app.location?.trim() ?? "");
     if (countries.length === 0) {
-      add(t("common.unknown"));
+      add("unknown");
       continue;
     }
-    for (const code of countries) {
-      add(t(`country.${code}`));
-    }
+    for (const code of countries) add(code);
   }
 
   return Array.from(counts.entries())
-    .map(([location, count]) => ({ location, count }))
+    .map(([code, count]) => ({
+      code,
+      location: code === "unknown" ? t("common.unknown") : t(`country.${code}`),
+      count,
+    }))
     .sort((a, b) => b.count - a.count)
     .slice(0, limit);
 }

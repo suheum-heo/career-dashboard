@@ -20,6 +20,7 @@ import {
   availableSeasons,
   availableYears,
   availableStartYears,
+  applicationsHrefForCountry,
   applicationsHrefForMetric,
   chartDataForPeriod,
   computeStats,
@@ -136,7 +137,12 @@ export default async function AnalyticsPage({
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <LocationChart data={locations} />
+            <LocationChart
+              data={locations.map((row) => ({
+                ...row,
+                href: applicationsHrefForCountry(row.code, period),
+              }))}
+            />
           </CardContent>
         </Card>
       </div>

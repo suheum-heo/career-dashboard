@@ -20,6 +20,36 @@ export type CountryCode =
   | "AE"
   | "remote";
 
+/** Chart bucket: a country, remote with no country, or a location we could not place. */
+export type LocationBucket = CountryCode | "unknown";
+
+const LOCATION_BUCKETS = new Set<string>([
+  "US",
+  "KR",
+  "SG",
+  "CA",
+  "GB",
+  "JP",
+  "CN",
+  "HK",
+  "TW",
+  "DE",
+  "FR",
+  "IE",
+  "NL",
+  "CH",
+  "AU",
+  "IN",
+  "IL",
+  "AE",
+  "remote",
+  "unknown",
+]);
+
+export function isLocationBucket(value: string): value is LocationBucket {
+  return LOCATION_BUCKETS.has(value);
+}
+
 const COUNTRY_PATTERNS: ReadonlyArray<[RegExp, CountryCode]> = [
   // Abbreviations like "U.S." end on a period, so a trailing word boundary never matches.
   [/(?:^|[^a-z])(?:united states of america|united states|u\.s\.a\.|u\.s\.|usa|us)(?![a-z])/i, "US"],
@@ -259,4 +289,15 @@ export function countriesInLocation(location: string): CountryCode[] {
   if (found.size > 0) return [...found];
   if (REMOTE_RE.test(raw)) return ["remote"];
   return [];
+}
+
+/** True when this location string belongs in the clicked chart bucket. */
+export function locationMatchesBucket(
+  location: string | null | undefined,
+  bucket: string
+): boolean {
+  if (!isLocationBucket(bucket)) return false;
+  const found = countriesInLocation(location ?? "");
+  if (bucket === "unknown") return found.length === 0;
+  return found.includes(bucket);
 }

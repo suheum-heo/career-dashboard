@@ -18,6 +18,7 @@ type SearchParams = Promise<{
   search?: string;
   status?: string;
   location?: string;
+  country?: string;
   jobType?: string;
   startYear?: string;
   metric?: string;
@@ -43,6 +44,7 @@ export default async function ApplicationsPage({
       search: params.search,
       status: params.status,
       location: params.location,
+      country: params.country,
       jobType: params.jobType,
       startYear: params.startYear,
       metric: params.metric,

@@ -40,16 +40,26 @@ async function sign(value: string) {
   );
 }
 
+async function passwordTag() {
+  const mac = await sign(`tag:${process.env.DASHBOARD_PASSWORD ?? ""}`);
+  return toBase64Url(mac).slice(0, 16);
+}
+
 export async function createSessionToken() {
   const payload = toBase64Url(
-    new TextEncoder().encode(JSON.stringify({ exp: Date.now() + SESSION_MAX_AGE * 1000 }))
+    new TextEncoder().encode(
+      JSON.stringify({
+        exp: Date.now() + SESSION_MAX_AGE * 1000,
+        tag: await passwordTag(),
+      })
+    )
   );
   const signature = toBase64Url(await sign(payload));
   return `${payload}.${signature}`;
 }
 
 export async function verifySessionToken(token: string | undefined) {
-  if (!token || !process.env.AUTH_SECRET) return false;
+  if (!token || !authConfigured()) return false;
   const dot = token.indexOf(".");
   if (dot <= 0) return false;
   const payload = token.slice(0, dot);
@@ -65,8 +75,13 @@ export async function verifySessionToken(token: string | undefined) {
   try {
     const data = JSON.parse(new TextDecoder().decode(fromBase64Url(payload))) as {
       exp?: number;
+      tag?: string;
     };
-    return typeof data.exp === "number" && data.exp > Date.now();
+    return (
+      typeof data.exp === "number" &&
+      data.exp > Date.now() &&
+      data.tag === (await passwordTag())
+    );
   } catch {
     return false;
   }

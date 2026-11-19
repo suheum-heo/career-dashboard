@@ -9,6 +9,7 @@ import {
   CalendarDays,
   Plus,
   Menu,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Logo } from "@/components/logo";
 import { useLocale } from "@/components/locale-provider";
+import { logout } from "@/lib/auth-actions";
 import { useState } from "react";
 
 function NavLinks({ onNavigate }: { onNavigate?: () => void }) {
@@ -96,6 +98,15 @@ export function Sidebar() {
             <Plus className="size-4" />
             {t("nav.addApplication")}
           </Link>
+          <form action={logout}>
+            <button
+              type="submit"
+              className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+            >
+              <LogOut className="size-4" />
+              {t("nav.logout")}
+            </button>
+          </form>
         </div>
       </div>
     </aside>
@@ -137,6 +148,15 @@ export function MobileHeader() {
                   <Plus className="size-4" />
                   {t("nav.addApplication")}
                 </Link>
+                <form action={logout}>
+                  <button
+                    type="submit"
+                    className="flex h-9 w-full items-center justify-center gap-2 rounded-xl text-sm text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                  >
+                    <LogOut className="size-4" />
+                    {t("nav.logout")}
+                  </button>
+                </form>
               </div>
             </div>
           </SheetContent>

@@ -10,6 +10,15 @@ export const en = {
     calendar: "Calendar",
     addApplication: "Add Application",
     navigation: "Navigation",
+    logout: "Log out",
+  },
+  login: {
+    title: "Sign in",
+    description: "This dashboard is private.",
+    password: "Password",
+    submit: "Continue",
+    invalid: "Wrong password.",
+    unconfigured: "Sign-in is not configured yet.",
   },
   language: {
     label: "Language",

@@ -15,6 +15,7 @@ import {
 } from "@/lib/constants";
 import { subDays } from "date-fns";
 import { currentSeason, parseSeason, seasonOf, seasonRange } from "@/lib/season";
+import { requireUser } from "@/lib/session";
 import {
   extractFromImage,
   extractFromUrl,
@@ -139,6 +140,7 @@ async function autoGhostStaleApplications() {
 }
 
 export async function getApplications(params: ApplicationListParams = {}) {
+  await requireUser();
   await autoGhostStaleApplications();
   const page = Math.max(1, params.page ?? 1);
   const sortBy = params.sortBy ?? "dateApplied";
@@ -204,10 +206,12 @@ export async function getApplications(params: ApplicationListParams = {}) {
 }
 
 export async function getApplication(id: string) {
+  await requireUser();
   return prisma.application.findUnique({ where: { id } });
 }
 
 export async function getAllApplications() {
+  await requireUser();
   await autoGhostStaleApplications();
   return prisma.application.findMany({
     orderBy: { updatedAt: "desc" },
@@ -215,6 +219,7 @@ export async function getAllApplications() {
 }
 
 export async function getRecentApplications(limit = 8) {
+  await requireUser();
   await autoGhostStaleApplications();
   return prisma.application.findMany({
     orderBy: { updatedAt: "desc" },
@@ -223,6 +228,7 @@ export async function getRecentApplications(limit = 8) {
 }
 
 export async function getLocations() {
+  await requireUser();
   const rows = await prisma.application.findMany({
     where: { location: { not: null } },
     select: { location: true },
@@ -233,6 +239,7 @@ export async function getLocations() {
 }
 
 export async function getSeasons() {
+  await requireUser();
   const rows = await prisma.application.findMany({
     select: { dateApplied: true, createdAt: true },
   });
@@ -244,6 +251,7 @@ export async function getSeasons() {
 }
 
 export async function getStartYears() {
+  await requireUser();
   const rows = await prisma.application.findMany({
     where: { startYear: { not: null } },
     select: { startYear: true },
@@ -254,6 +262,7 @@ export async function getStartYears() {
 }
 
 export async function getCalendarEvents() {
+  await requireUser();
   const apps = await prisma.application.findMany({
     where: {
       OR: [
@@ -267,6 +276,7 @@ export async function getCalendarEvents() {
 }
 
 export async function createApplication(raw: unknown) {
+  await requireUser();
   const parsed = applicationSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -318,6 +328,7 @@ export async function createApplication(raw: unknown) {
 }
 
 export async function updateApplication(id: string, raw: unknown) {
+  await requireUser();
   const parsed = applicationSchema.safeParse(raw);
   if (!parsed.success) {
     return { error: parsed.error.flatten().fieldErrors };
@@ -378,6 +389,7 @@ export async function updateApplication(id: string, raw: unknown) {
 }
 
 export async function updateApplicationStatus(id: string, status: string) {
+  await requireUser();
   if (!Object.values(ApplicationStatus).includes(status as ApplicationStatus)) {
     return { error: "Invalid status" };
   }
@@ -414,6 +426,7 @@ export async function updateApplicationStatus(id: string, status: string) {
 }
 
 export async function deleteApplication(id: string) {
+  await requireUser();
   await prisma.application.delete({ where: { id } });
   revalidatePath("/");
   revalidatePath("/applications");
@@ -423,6 +436,7 @@ export async function deleteApplication(id: string) {
 }
 
 export async function deleteApplications(ids: string[]) {
+  await requireUser();
   if (!ids.length) {
     return { error: "No applications selected" };
   }
@@ -439,10 +453,12 @@ export async function deleteApplications(ids: string[]) {
 }
 
 export async function getGeminiConfigured() {
+  await requireUser();
   return isGeminiConfigured();
 }
 
 export async function importFromJobUrl(url: string) {
+  await requireUser();
   try {
     if (!isGeminiConfigured()) {
       return {
@@ -463,6 +479,7 @@ export async function importFromJobImage(input: {
   base64: string;
   mimeType: string;
 }) {
+  await requireUser();
   try {
     if (!isGeminiConfigured()) {
       return {

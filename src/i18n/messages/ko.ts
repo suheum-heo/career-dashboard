@@ -12,6 +12,15 @@ export const ko = {
     calendar: "캘린더",
     addApplication: "지원 추가",
     navigation: "메뉴",
+    logout: "로그아웃",
+  },
+  login: {
+    title: "로그인",
+    description: "이 대시보드는 비공개입니다.",
+    password: "비밀번호",
+    submit: "계속",
+    invalid: "비밀번호가 올바르지 않습니다.",
+    unconfigured: "로그인이 아직 설정되지 않았습니다.",
   },
   language: {
     label: "언어",

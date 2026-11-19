@@ -8,6 +8,7 @@ import { Sidebar, MobileHeader } from "@/components/layout/sidebar";
 import { NavigationProgress } from "@/components/navigation-progress";
 import { LocaleProvider } from "@/components/locale-provider";
 import { getLocale } from "@/i18n/server";
+import { isAuthenticated } from "@/lib/session";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -46,6 +47,7 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   const locale = await getLocale();
+  const authed = await isAuthenticated();
 
   return (
     <html lang={locale === "ko" ? "ko" : "en"} suppressHydrationWarning>
@@ -55,18 +57,24 @@ export default async function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           <LocaleProvider locale={locale}>
             <TooltipProvider>
-              <Suspense fallback={null}>
-                <NavigationProgress />
-              </Suspense>
-              <div className="flex min-h-screen">
-                <Sidebar />
-                <div className="flex min-w-0 flex-1 flex-col">
-                  <MobileHeader />
-                  <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
-                    <div className="mx-auto w-full max-w-7xl">{children}</div>
-                  </main>
-                </div>
-              </div>
+              {authed ? (
+                <>
+                  <Suspense fallback={null}>
+                    <NavigationProgress />
+                  </Suspense>
+                  <div className="flex min-h-screen">
+                    <Sidebar />
+                    <div className="flex min-w-0 flex-1 flex-col">
+                      <MobileHeader />
+                      <main className="flex-1 px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+                        <div className="mx-auto w-full max-w-7xl">{children}</div>
+                      </main>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                children
+              )}
               <Toaster richColors position="top-right" />
             </TooltipProvider>
           </LocaleProvider>

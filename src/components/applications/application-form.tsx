@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useLocale } from "@/components/locale-provider";
+import type { Translator } from "@/i18n";
 import {
   ALL_JOB_TYPES,
   ALL_STATUSES,
@@ -39,6 +40,37 @@ type Props = {
 
 function emptyToValue(value?: string | null) {
   return value ?? "";
+}
+
+const FIELD_LABELS: Record<string, string> = {
+  company: "applications.company",
+  jobTitle: "applications.jobTitle",
+  location: "applications.location",
+  dateApplied: "applications.dateApplied",
+  status: "applications.status",
+  jobType: "applications.type",
+  startYear: "applications.startYear",
+  salary: "applications.salary",
+  jobLink: "applications.jobLink",
+  resumeVersion: "applications.resumeVersion",
+  coverLetter: "applications.coverLetter",
+  notes: "applications.notes",
+  interviewDate: "applications.interviewDate",
+  deadline: "applications.deadline",
+};
+
+function formErrorMessage(error: unknown, t: Translator) {
+  if (!error || typeof error !== "object") return t("applications.formError");
+  const lines: string[] = [];
+  for (const [field, messages] of Object.entries(error)) {
+    const list = Array.isArray(messages)
+      ? messages.filter((message): message is string => typeof message === "string")
+      : [];
+    if (!list.length) continue;
+    const label = FIELD_LABELS[field] ? t(FIELD_LABELS[field]) : field;
+    lines.push(`${label}: ${list[0]}`);
+  }
+  return lines.length ? lines.join(" · ") : t("applications.formError");
 }
 
 export function ApplicationForm({
@@ -164,7 +196,7 @@ export function ApplicationForm({
         : await createApplication(payload);
 
       if (result.error) {
-        toast.error(t("applications.formError"));
+        toast.error(formErrorMessage(result.error, t));
         return;
       }
 

@@ -11,7 +11,7 @@ const jobTypeValues = Object.values(JobType) as [JobType, ...JobType[]];
 export const applicationSchema = z.object({
   company: z.string().min(1, "Company is required").max(120),
   jobTitle: z.string().min(1, "Job title is required").max(160),
-  location: z.string().max(120).optional().nullable(),
+  location: z.string().max(500, "Location is too long").optional().nullable(),
   dateApplied: z.string().optional().nullable(),
   status: z.enum(statusValues),
   jobType: z.enum(jobTypeValues),
@@ -19,7 +19,7 @@ export const applicationSchema = z.object({
     .union([z.number().int().min(2000).max(2100), z.null()])
     .optional()
     .nullable(),
-  salary: z.string().max(80).optional().nullable(),
+  salary: z.string().max(240, "Salary is too long").optional().nullable(),
   referral: z.boolean(),
   recruiterOutreach: z.boolean().optional().default(false),
   jobLink: z
@@ -27,7 +27,7 @@ export const applicationSchema = z.object({
     .optional(),
   resumeVersion: z.string().max(80).optional().nullable(),
   coverLetter: z.boolean(),
-  notes: z.string().max(5000).optional().nullable(),
+  notes: z.string().max(50000, "Notes are too long").optional().nullable(),
   interviewDate: z.string().optional().nullable(),
   deadline: z.string().optional().nullable(),
   oaReached: z.boolean().optional().default(false),
